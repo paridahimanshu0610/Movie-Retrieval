@@ -1,0 +1,29 @@
+# Scene-Based Movie Retrieval — Minimal Test
+# Mac M4 (Apple Silicon) — all packages support MPS / arm64
+
+# Core ML
+torch>=2.3.0           # MPS support for Apple Silicon
+torchvision>=0.18.0
+transformers>=4.42.0
+accelerate>=0.30.0
+
+# Visual backbone (InternVideo2-CLIP → CLIP fallback)
+open_clip_torch>=2.24.0
+
+# Captioning model (BLIP-2, proxy for LLaVA-Video during testing)
+# LLaVA-Video (7B) is swappable in text_embedder.py once you have enough RAM headroom
+
+# Speech transcription
+openai-whisper>=20231117
+
+# Text embeddings
+sentence-transformers>=3.0.0
+
+# Video / image I/O
+opencv-python>=4.10.0
+Pillow>=10.3.0
+
+# Utilities
+numpy>=1.26.0
+tqdm>=4.66.0
+yt-dlp>=2024.5.1       # for downloading sample clips (optional)
