@@ -14,6 +14,7 @@ import sys
 
 import config
 from embedders.text_embedder import TextEmbedder
+from embedders.visual_embedder import VisualEmbedder
 from core.indexer import DualIndex, Retriever
 
 
@@ -22,12 +23,13 @@ def run_query(query: str, top_k: int = 5) -> None:
     index = DualIndex()
     index.load(config.INDEX_DIR)
 
-    # Load only the lightweight text embedder (no GPU-heavy models needed at query time)
+    # Load both query embedders so each index is searched in its aligned embedding space.
     text_embedder = TextEmbedder()
-    retriever = Retriever(index, text_embedder)
+    visual_embedder = VisualEmbedder()
+    retriever = Retriever(index, text_embedder, visual_embedder)
 
     # Search
-    results = retriever.search(query, top_k=top_k)
+    results = retriever.search(query, top_k=top_k, debug=True)
 
     print(f"\n{'═'*60}")
     print(f"  Query : \"{query}\"")

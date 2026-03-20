@@ -97,3 +97,22 @@ class VisualEmbedder:
             return self._model.config.hidden_size
         # CLIP ViT-L/14 → 768
         return 768
+    
+    @torch.no_grad()
+    def embed_text(self, text: str) -> np.ndarray:
+        if self._model_type == "internvideo2":
+            return self._embed_text_internvideo2(text)
+        return self._embed_text_clip(text)
+
+    def _embed_text_internvideo2(self, text: str) -> np.ndarray:
+        inputs = self._processor(text=[text], return_tensors="pt").to(self.device)
+        feats = self._model.get_text_features(**inputs)
+        vec = feats[0].float().cpu().numpy()
+        return vec / (np.linalg.norm(vec) + 1e-8)
+
+    def _embed_text_clip(self, text: str) -> np.ndarray:
+        import open_clip
+        tokens = open_clip.tokenize([text]).to(self.device)
+        feats = self._model.encode_text(tokens)
+        vec = feats[0].float().cpu().numpy()
+        return vec / (np.linalg.norm(vec) + 1e-8)

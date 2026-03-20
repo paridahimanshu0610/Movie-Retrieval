@@ -138,19 +138,31 @@ class Retriever:
     merges with RRF, and returns ranked metadata records.
     """
 
-    def __init__(self, index: DualIndex, text_embedder):
-        self._index   = index
-        self._embedder = text_embedder
+    def __init__(self, index: DualIndex, text_embedder, visual_embedder):
+        self._index           = index
+        self._text_embedder   = text_embedder    # Sentence-BERT
+        self._visual_embedder = visual_embedder  # InternVideo2 / CLIP
 
-    def search(self, query: str, top_k: int = 5) -> List[Dict]:
+    def search(self, query: str, top_k: int = 5, debug: bool = False) -> List[Dict]:
         if len(self._index) == 0:
             raise RuntimeError("Index is empty. Run build_index.py first.")
 
-        q_vec = self._embedder.embed(query)
+        vis_q_vec  = self._visual_embedder.embed_text(query)  # aligned with visual index
+        text_q_vec = self._text_embedder.embed(query)         # aligned with text index
 
-        # Search both sub-indexes
-        vis_results  = self._index.search_visual(q_vec, top_k * 3)
-        text_results = self._index.search_text  (q_vec, top_k * 3)
+        vis_results  = self._index.search_visual(vis_q_vec,  top_k * 3)
+        text_results = self._index.search_text  (text_q_vec, top_k * 3)
+        
+        if debug==True:
+            # Checking the results for visual search
+            for idx, score in vis_results:
+                metadata = self._index.metadata[idx]
+                print(f"Visual Search - Clip ID: {metadata['clip_id']}, Movie: {metadata['movie']}, Score: {score}")
+            
+            # Checking the results for text search
+            for idx, score in text_results:
+                metadata = self._index.metadata[idx]
+                print(f"Text Search - Clip ID: {metadata['clip_id']}, Movie: {metadata['movie']}, Score: {score}")
 
         # Merge with RRF
         merged = reciprocal_rank_fusion([vis_results, text_results])

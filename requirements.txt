@@ -4,7 +4,7 @@
 # Core ML
 torch>=2.3.0           # MPS support for Apple Silicon
 torchvision>=0.18.0
-transformers>=4.42.0
+transformers>=4.46.0
 accelerate>=0.30.0
 
 # Visual backbone (InternVideo2-CLIP → CLIP fallback)
@@ -22,6 +22,7 @@ sentence-transformers>=3.0.0
 # Video / image I/O
 opencv-python>=4.10.0
 Pillow>=10.3.0
+av>=12.0.0
 
 # Utilities
 numpy>=1.26.0

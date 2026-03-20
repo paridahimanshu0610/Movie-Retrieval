@@ -3,21 +3,24 @@ text_embedder.py — Build a text embedding for each clip.
 
 Pipeline
 ────────
-1. CaptionGenerator   : BLIP-2 (test)  /  LLaVA-Video (production)
-                        → 3 key-frame captions joined into a paragraph
+1. CaptionGenerator   : BLIP-2 (test) / LLaVA-Video (production)
+                        → description from sampled frames or whole-video reasoning
 2. TranscriptExtractor: Whisper
                         → spoken dialogue / narration
-3. TextEmbedder       : Sentence-BERT  (all-mpnet-base-v2)
-                        → dense embedding of  "Caption: … | Transcript: …"
+3. TextEmbedder       : Sentence-BERT (all-mpnet-base-v2)
+                        → dense embedding of "Caption: ... | Transcript: ..."
 
 Swap CAPTION_MODEL in config.py to "llava_video" for the full pipeline.
 """
 
 from __future__ import annotations
-import torch
+
+from pathlib import Path
+from typing import List
+
 import numpy as np
 from PIL import Image
-from typing import List
+import torch
 
 import config
 
@@ -26,91 +29,173 @@ import config
 
 class CaptionGenerator:
     """
-    Generates natural-language descriptions from video key frames.
+    Generates natural-language descriptions for each clip.
 
-    BLIP-2 (blip2-opt-2.7b) is used for testing; swap to LLaVA-Video-7B
-    by setting CAPTION_MODEL = "llava_video" in config.py.
+    BLIP-2 captions a subset of sampled frames.
+    LLaVA-Video reasons over the clip as a video and produces one description.
     """
 
     def __init__(self):
-        model_choice = config.CAPTION_MODEL
-        if model_choice == "blip2":
+        self._model_choice = config.CAPTION_MODEL
+        if self._model_choice == "blip2":
             self._load_blip2()
-        elif model_choice == "llava_video":
+        elif self._model_choice == "llava_video":
             self._load_llava_video()
         else:
-            raise ValueError(f"Unknown CAPTION_MODEL: {model_choice!r}")
+            raise ValueError(f"Unknown CAPTION_MODEL: {self._model_choice!r}")
 
     # ── BLIP-2 ────────────────────────────────────────────────────────────────
 
     def _load_blip2(self):
-        from transformers import Blip2Processor, Blip2ForConditionalGeneration
+        from transformers import Blip2ForConditionalGeneration, Blip2Processor
+
         hf_id = "Salesforce/blip2-opt-2.7b"
-        print(f"[CaptionGenerator] Loading BLIP-2 ({hf_id}) …")
+        print(f"[CaptionGenerator] Loading BLIP-2 ({hf_id}) ...")
 
-        # MPS doesn't support bfloat16 well; use float16 on MPS/CUDA, float32 on CPU
-        dtype = torch.float16 if config.DEVICE in ("mps", "cuda") else torch.float32
-
+        # MPS doesn't support bfloat16 well; use float16 on MPS/CUDA, float32 on CPU.
+        self._dtype = torch.float16 if config.DEVICE in ("mps", "cuda") else torch.float32
         self._processor = Blip2Processor.from_pretrained(hf_id)
         self._model = (
-            Blip2ForConditionalGeneration.from_pretrained(hf_id, torch_dtype=dtype)
+            Blip2ForConditionalGeneration.from_pretrained(hf_id, torch_dtype=self._dtype)
             .to(config.DEVICE)
             .eval()
         )
-        self._dtype = dtype
-        self._gen_fn = self._blip2_caption
         print("[CaptionGenerator] ✓ BLIP-2 loaded")
 
     @torch.no_grad()
     def _blip2_caption(self, frame: Image.Image) -> str:
         inputs = self._processor(images=frame, return_tensors="pt")
-        inputs = {k: v.to(config.DEVICE, self._dtype) if v.is_floating_point() else v.to(config.DEVICE)
-                  for k, v in inputs.items()}
-        out = self._model.generate(**inputs, max_new_tokens=80)
+        inputs = {
+            k: v.to(config.DEVICE, self._dtype) if v.is_floating_point() else v.to(config.DEVICE)
+            for k, v in inputs.items()
+        }
+        out = self._model.generate(**inputs, max_new_tokens=200)
         return self._processor.decode(out[0], skip_special_tokens=True).strip()
+
+    def _caption_selected_frames(self, frames: List[Image.Image]) -> str:
+        if not frames:
+            raise ValueError("caption(...) expected at least one frame.")
+
+        n = min(config.NUM_CAPTION_FRAMES, len(frames))
+        indices = np.linspace(0, len(frames) - 1, n, dtype=int)
+        selected_frames = [frames[i] for i in indices]
+
+        parts: List[str] = []
+        for i, frame in enumerate(selected_frames, start=1):
+            parts.append(f"Frame {i}: {self._blip2_caption(frame)}")
+        return " ".join(parts)
 
     # ── LLaVA-Video ───────────────────────────────────────────────────────────
 
     def _load_llava_video(self):
         """
-        LLaVA-Video-7B-Qwen2 (lmms-lab/LLaVA-Video-7B-Qwen2).
-        Requires ~15 GB RAM.  Set CAPTION_MODEL = "llava_video" in config.py.
+        LLaVA-NeXT-Video-7B-hf (llava-hf/LLaVA-NeXT-Video-7B-hf).
+        Uses the Transformers-native video model.
         """
-        from transformers import AutoProcessor, LlavaForConditionalGeneration
-        hf_id = "lmms-lab/LLaVA-Video-7B-Qwen2"
-        print(f"[CaptionGenerator] Loading LLaVA-Video ({hf_id}) …")
-        self._processor = AutoProcessor.from_pretrained(hf_id, trust_remote_code=True)
-        self._model = (
-            LlavaForConditionalGeneration.from_pretrained(
-                hf_id, torch_dtype=torch.float16, trust_remote_code=True
-            )
-            .to(config.DEVICE)
-            .eval()
-        )
-        self._gen_fn = self._llava_caption
-        print("[CaptionGenerator] ✓ LLaVA-Video loaded")
+        import av
+        from transformers import LlavaNextVideoForConditionalGeneration, LlavaNextVideoProcessor
+
+        hf_id = "llava-hf/LLaVA-NeXT-Video-7B-hf"
+        print(f"[CaptionGenerator] Loading LLaVA-NeXT-Video ({hf_id}) ...")
+
+        self._av = av
+        self._dtype = torch.float16 if config.DEVICE in ("mps", "cuda") else torch.float32
+        self._processor = LlavaNextVideoProcessor.from_pretrained(hf_id)
+        self._model = LlavaNextVideoForConditionalGeneration.from_pretrained(
+            hf_id,
+            torch_dtype=self._dtype,
+            low_cpu_mem_usage=True,
+        ).to(config.DEVICE)
+        self._model.eval()
+        print("[CaptionGenerator] ✓ LLaVA-NeXT-Video loaded")
+
+    def _load_video_for_llava(
+        self,
+        video_path: str | Path,
+        num_frames: int,
+    ) -> tuple[np.ndarray, str, float]:
+        container = self._av.open(str(video_path))
+        stream = container.streams.video[0]
+        total_frames = stream.frames
+        if total_frames <= 0:
+            frames = [frame for frame in container.decode(video=0)]
+            total_frames = len(frames)
+            if total_frames == 0:
+                raise ValueError(f"Video {video_path} contains no decodable frames.")
+            decoded = [frame.to_ndarray(format="rgb24") for frame in frames]
+            fps = float(stream.average_rate) if stream.average_rate else 1.0
+            container.close()
+            frame_indices = np.linspace(0, total_frames - 1, num_frames, dtype=int)
+            frame_indices = np.unique(frame_indices)   # remove duplicates if clip is short
+            clip = np.stack([decoded[i] for i in frame_indices])
+        else:
+            frame_indices = np.linspace(0, total_frames - 1, num_frames, dtype=int)
+            frame_indices = np.unique(frame_indices)   # remove duplicates if clip is short
+            frame_set = set(int(i) for i in frame_indices.tolist())
+            decoded = []
+            container.seek(0)
+            for i, frame in enumerate(container.decode(video=0)):
+                if i > int(frame_indices[-1]):
+                    break
+                if i in frame_set:
+                    decoded.append(frame.to_ndarray(format="rgb24"))
+            fps = float(stream.average_rate) if stream.average_rate else 1.0
+            container.close()
+            clip = np.stack(decoded)
+
+        video_time = total_frames / fps
+        frame_time = ",".join(f"{i / fps:.2f}s" for i in frame_indices)
+        return clip, frame_time, video_time
 
     @torch.no_grad()
-    def _llava_caption(self, frame: Image.Image) -> str:
-        prompt = "Describe what is happening in this video frame in detail."
-        inputs = self._processor(text=prompt, images=frame, return_tensors="pt").to(config.DEVICE)
-        out = self._model.generate(**inputs, max_new_tokens=200)
-        text = self._processor.decode(out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
-        return text.strip()
+    def _llava_caption(self, video_path: str | Path) -> str:
+        clip, frame_time, video_time = self._load_video_for_llava(
+            video_path,
+            num_frames=max(8, config.NUM_CAPTION_FRAMES),
+        )
+
+        conversation = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": (
+                            f"The video lasts for {video_time:.2f} seconds. "
+                            f"{len(clip)} uniformly sampled frames are provided at {frame_time}. "
+                            "Please describe this video in detail."
+                        ),
+                    },
+                    {"type": "video"},
+                ],
+            }
+        ]
+        prompt = self._processor.apply_chat_template(conversation, add_generation_prompt=True)
+        inputs = self._processor(
+            text=prompt,
+            videos=clip,
+            padding=True,
+            return_tensors="pt",
+        ).to(self._model.device)
+
+        output_ids = self._model.generate(
+            **inputs,
+            do_sample=False,
+            temperature=0,
+            max_new_tokens=512,
+        )
+        generated_ids = output_ids[:, inputs["input_ids"].shape[1]:]
+        return self._processor.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
 
     # ── Public API ────────────────────────────────────────────────────────────
 
-    def caption_frames(self, frames: List[Image.Image]) -> str:
-        """
-        Captions three key frames (first / middle / last) and joins them
-        into a multi-sentence paragraph.
-        """
-        key = [frames[0], frames[len(frames) // 2], frames[-1]]
-        parts: List[str] = []
-        for i, f in enumerate(key, start=1):
-            c = self._gen_fn(f)
-            parts.append(f"Frame {i}: {c}")
-        return " ".join(parts)
+    def caption(self, frames: List[Image.Image], video_path: str | Path | None = None) -> str:
+        if self._model_choice == "blip2":
+            return self._caption_selected_frames(frames)
+
+        if video_path is None:
+            raise ValueError("caption(..., video_path=...) is required for llava_video.")
+        return self._llava_caption(video_path)
 
 
 # ── 2. Transcript Extractor ───────────────────────────────────────────────────
@@ -158,7 +243,7 @@ def build_clip_text(caption: str, transcript: str) -> str:
     Combine caption and transcript into a single string fed to Sentence-BERT.
     Transcript is truncated to avoid overwhelming the caption signal.
     """
-    transcript = transcript[:400] if transcript else ""
+    transcript = transcript[:1000] if transcript else ""
     if transcript:
         return f"Visual description: {caption}. Dialogue: {transcript}"
     return f"Visual description: {caption}"

@@ -80,8 +80,8 @@ def build_index() -> DualIndex:
         vis_emb = visual_embedder.embed_frames(frames)
         print(f"   vis_emb  : shape={vis_emb.shape}  norm={float(vis_emb @ vis_emb):.3f}")
 
-        # 3. Caption
-        caption = caption_generator.caption_frames(frames)
+        # 3. Caption (frame-based for BLIP-2, clip-level for LLaVA video)
+        caption = caption_generator.caption(frames, video_path=video_path)
         print(f"   caption  : {caption[:100]} …")
 
         # 4. Transcript
