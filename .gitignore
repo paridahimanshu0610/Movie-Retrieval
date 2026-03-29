@@ -1,0 +1,24 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Generated pipeline outputs (rebuild with: python main.py)
+output/
+indices/
+screenplays/converted/
+
+# Screenplay source files (PDF/HTML/TXT — large, often copyrighted)
+screenplays/*.pdf
+screenplays/*.html
+screenplays/*.txt
+
+# OS
+.DS_Store
+Thumbs.db
