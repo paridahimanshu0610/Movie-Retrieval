@@ -1,48 +1,40 @@
-# Screenplay Retrieval System — Architecture
+# Architecture
 
-## Goal
-
-Given a natural-language description, identify **which movie** the described
-scene, dialogue, or plot moment belongs to. The query comes from a user who
-remembers something about a movie but not its title.
+The system answers one question: given a natural-language description of a scene, line of dialogue, or plot moment, which movie is it from? The user remembers something but not the title. The system ranks movies by how well their screenplay content matches the description.
 
 ---
 
-## Pipeline
+## Offline pipeline
 
 ```
-Raw screenplay files (PDF / HTML / TXT)
+PDF / HTML / TXT files
         |
         v
-  [1] manifest_sync.py    -> screenplays/manifest.json  (register new files)
+  manifest_sync.py       registers new files -> screenplays/manifest.json
         |
         v
-  [2] tmdb_fetch.py       -> output/{slug}_metadata.json  (TMDB metadata + cast)
+  tmdb_fetch.py          fetches metadata, cast, genres -> output/{slug}_metadata.json
         |
         v
-  [3] convert.py          -> screenplays/converted/{slug}.txt  (normalized text)
+  convert.py             normalizes to plain-text -> screenplays/converted/{slug}.txt
         |
         v
-  [4] batch.py            -> output/{slug}_scenes.json  (structured scenes)
+  batch.py               parses scenes -> output/{slug}_scenes.json
         |
         v
-  [5] character_reconcile.py -> output/{slug}_characters.json  (cast mapping)
+  character_reconcile.py maps screenplay names to TMDB cast -> output/{slug}_characters.json
         |
         v
-  [6] index_builder.py    -> indices/  (FAISS + BM25 + structured JSON)
-        |
-        v
-      retriever.py        -> query -> ranked movie list
+  index_builder.py       builds all indices -> indices/
 ```
 
-Run the full pipeline with:
-```
-python main.py
-```
+Run with `cd backend && python main.py`. Individual steps can be run with `--only <step>` or resumed from a checkpoint with `--from <step>`.
 
 ---
 
-## Scene JSON schema
+## Scene JSON
+
+The parser converts raw screenplay text into scene objects. Each scene is the unit of indexing.
 
 ```json
 {
@@ -69,149 +61,146 @@ python main.py
 }
 ```
 
----
-
-## Index inventory
-
-| Index | Document unit | Content | Best query type |
-|-------|--------------|---------|-----------------|
-| `scene` | one scene | heading + action_lines | Visual/action descriptions |
-| `dialogue` | one scene | `CHARACTER: line` for every exchange | Remembered quotes |
-| `character` | one scene | all dialogue grouped by character | Character-specific queries |
-| `full` | one scene | all fields concatenated | Hybrid / ambiguous fallback |
-| `plot` | one movie | TMDB overview synopsis | Plot/story beat queries |
-
-Structured JSON inverted indices (no embeddings needed):
-
-| Index | Key | Value |
-|-------|-----|-------|
-| `actor_index` | actor name | list of movie_ids |
-| `director_index` | director name | list of movie_ids |
-| `genre_index` | genre | list of movie_ids |
-| `character_index` | character name | list of {movie_id, actor, scene_count} |
-| `location_index` | location string | list of {movie_id, scene_id} |
-| `registry` | movie_id | {title, slug, year, genres, overview, ...} |
-
-Every document in the dense/sparse indices carries `scene_id` and `movie_id` as payload.
-Retrieval always resolves back to a ranked movie list.
+Character names in screenplays are ALL-CAPS. `character_reconcile.py` maps these to TMDB cast entries (e.g., `GRIFF` → "Jon Bernthal") for the structured indices.
 
 ---
 
-## Query routing
+## Indices
 
-**Option A — Questionnaire (deterministic, no LLM cost)**
-```
-What best describes what you remember?
-  [1] A visual scene or action   -> scene index
-  [2] A line of dialogue         -> dialogue index
-  [3] A plot moment / story beat -> plot index
-  [4] Something a character does -> character index
-  [5] A mix / I'm not sure       -> full index + fusion
-```
+Five dense+sparse index pairs, each covering a different slice of the screenplay:
 
-**Option B — LLM intent classification**
-```
-Prompt: Classify this query into one or more retrieval intents:
-        [scene, dialogue, character, plot, hybrid].
-        Return JSON: {"intents": [...], "weights": [...]}
+| Index | What's indexed | Suited for |
+|-------|---------------|------------|
+| `scene` | heading + action lines | visual descriptions, locations, physical action |
+| `dialogue` | `CHARACTER: line` for every exchange | remembered quotes or lines |
+| `character` | all dialogue grouped by character | queries about what a character says or does |
+| `full` | all fields concatenated | broad or ambiguous queries |
+| `plot` | TMDB overview (one per movie) | plot beats, genres, actor/director names |
 
-Query:  "the part where the villain quotes shakespeare before the final fight"
+Each index is stored as three files: a FAISS flat inner-product index (cosine similarity on normalized vectors), a JSON metadata list in the same order as the FAISS vectors, and a BM25Okapi pickle. Every document in all five indices carries `scene_id` and `movie_id` as payload so results can always be traced back to a movie.
 
-Response: {"intents": ["dialogue", "scene"], "weights": [0.7, 0.3]}
-```
+Six structured JSON indices handle queries that don't need embeddings:
+
+| File | Maps |
+|------|------|
+| `actor_index.json` | actor name → [movie_ids] |
+| `director_index.json` | director name → [movie_ids] |
+| `genre_index.json` | genre → [movie_ids] |
+| `character_index.json` | character name → [{movie_id, actor, scene_count}] |
+| `location_index.json` | location → [{movie_id, scene_id}] |
+| `registry.json` | movie_id → {title, slug, year, genres, directors, overview, ...} |
+
+Embeddings use `all-MiniLM-L6-v2` via sentence-transformers (384-dim). BM25 tokenization is lowercase alphanumeric only.
 
 ---
 
-## Hybrid retrieval flow
+## Query classification
+
+Before retrieval, each query is classified by an LLM (Claude Sonnet via TAMU AI) into a `QueryPlan`. The classifier runs few-shot prompting with six examples and returns a JSON object — no parsing hints, just raw JSON.
+
+The system recognizes 14 query types:
+
+| Type | Example |
+|------|---------|
+| `dialogue` | "Someone says I know kung fu" |
+| `simple_scene` | "Rooftop fight" |
+| `complex_scene` | "Tense argument in the rain about a plan" |
+| `detailed_scene` | "Man in suit offers red pill and blue pill" |
+| `event_journey` | "Training montage from beginner to master" |
+| `plot_level` | "Hacker discovers reality is fake" |
+| `similarity` | "Movies like The Matrix" |
+| `thematic` | "Movies about redemption" |
+| `thematic_scene` | "Scene about betrayal at a dinner table" |
+| `filtered` | "90s action movie with a helicopter chase" |
+| `multi_criteria` | "Car chase AND rooftop fight" |
+| `comparative` | "Like Inception but less confusing" |
+| `negation` | "Heist movie but NOT Ocean's Eleven" |
+| `multi_aspect` | "A hacker discovers reality is fake and someone says there is no spoon" |
+
+Each type maps to one or more index intents. For example, `dialogue` routes to `["dialogue"]`, `complex_scene` to `["scene", "full"]`, `plot_level` to `["plot"]`. The classifier also extracts metadata filters (genre, year range), a query rewrite for similarity/negation/filtered types, and sub-queries for `multi_aspect`.
+
+If the API key is missing or the LLM call fails, the system falls back to a default plan: `plot_level` with `["full"]` intent.
+
+---
+
+## Retrieval
 
 ```
-user query
-    |
-    v
-query router -> {scene: 0.6, dialogue: 0.4}
-    |                 |              |
-    |           scene_index    dialogue_index
-    |             top-20           top-20
-    |                 +---- RRF fusion ----+
-    |                             |
-    |                   re-rank by scene_id overlap
-    |                   (same scene in multiple index results = strong signal)
-    |                             |
-    v                             v
-group hits by movie_id  ->  score = sum of RRF scores
-    |
-    v
-ranked movie list  ("This sounds like Harry Potter")
+query
+  |
+  v
+intent_classifier.py -> QueryPlan
+  {
+    query_type: "multi_aspect",
+    intents: ["plot", "dialogue"],
+    filters: {genre: null, year_min: null, year_max: null},
+    sub_queries: [
+      {intent: "plot",     text: "hacker discovers reality is a simulation"},
+      {intent: "dialogue", text: "there is no spoon"}
+    ]
+  }
+  |
+  v
+retriever.py
+
+  1. Pre-filter: build allowed_id set from genre/year constraints (if any)
+  2. Text search:
+     - multi_aspect: each sub-query searched against its own index
+     - all other types: query searched against each intent index
+     - both FAISS and BM25 run in parallel (hybrid mode)
+  3. RRF fusion: combine all ranked lists into a single fused ranking
+  4. Aggregate by movie: sum RRF scores of all scenes from same movie
+  5. Return top-k movies with scores and top matching scenes
 ```
 
 ### Reciprocal Rank Fusion
 
+RRF is used instead of score normalization because FAISS inner-product scores and BM25 scores are not on the same scale. Rank positions are stable across methods; raw scores are not.
+
 ```python
-def rrf(rankings, k=60):
+def rrf_fuse(rankings, k=60):
     scores = {}
     for ranking in rankings:
-        for rank, item in enumerate(ranking):
-            scores[item] = scores.get(item, 0) + 1 / (k + rank + 1)
+        for rank, (_, meta) in enumerate(ranking):
+            sid = meta["scene_id"]
+            scores[sid] = scores.get(sid, 0) + 1.0 / (k + rank + 1)
     return sorted(scores, key=scores.get, reverse=True)
 ```
 
----
+### Why multi_aspect works
 
-## Retrieval challenges
-
-| Challenge | Mitigation |
-|-----------|-----------|
-| Paraphrase gap ("magic school letters" vs "Hogwarts owls") | Dense embeddings; fine-tuned model preferred over BM25 alone |
-| Imbalanced corpus (Interstellar 367 scenes vs Death Proof 28) | RRF aggregation rewards multiple hits from same movie |
-| Generic scenes (car chase, argument at dinner) | Require multiple top hits from same movie before committing |
-| Multi-scene queries ("the part where X then Y happens") | Chunk query, retrieve independently, intersect by movie |
+For a query like "a hacker discovers reality is fake and someone says there is no spoon", two sub-queries are searched independently — one against the `plot` index, one against `dialogue`. A movie that appears in both ranked lists gets RRF contributions from two sources and floats above movies that only match one sub-query. The Matrix ends up ranked first not because of a hard rule but because its scenes match both aspects.
 
 ---
 
-## File map
+## API
 
-```
-main.py                                 -- run full pipeline (all steps)
+FastAPI app at `backend/api.py`, runs on port 9000.
 
-screenplay_parser/
-  manifest_sync.py    -- scan screenplays dir, add new files to manifest.json
-  tmdb_fetch.py       -- fetch TMDB metadata (overview, cast, genres, directors)
-  convert.py          -- PDF/HTML/TXT -> normalized plain-text
-  ingest.py           -- lower-level text extraction (used by batch.py directly)
-  parse.py            -- ScreenPy scene detection + custom content parser
-  serialize.py        -- raw scene dicts -> final JSON schema
-  batch.py            -- CLI: runs convert -> parse -> serialize over manifest
-  character_reconcile.py -- map screenplay ALL-CAPS names to TMDB cast entries
+The three main search endpoints:
 
-retrieval/
-  index_builder.py    -- build FAISS, BM25, and structured JSON indices
-  retriever.py        -- query indices, RRF fusion, return ranked movie list
+- `POST /classify` — classify query intent, return QueryPlan (no search)
+- `POST /search` — search with a provided QueryPlan (no LLM call)
+- `POST /query` — classify + search in one call
 
-screenplays/
-  manifest.json             -- {filename: {tmdb_id, title, slug}}
-  converted/{slug}.txt      -- normalized plain-text output of convert.py
+`/search` exists so the frontend (or any client) can show the QueryPlan to the user, let them edit it, then submit it directly without re-running the LLM. Useful for debugging why a result ranked where it did.
 
-output/
-  {slug}_scenes.json        -- structured scene objects
-  {slug}_metadata.json      -- TMDB metadata (overview, cast, genres, directors)
-  {slug}_characters.json    -- screenplay name -> TMDB cast reconciliation
-
-indices/
-  scene.faiss / scene_meta.json / scene_bm25.pkl
-  dialogue.faiss / dialogue_meta.json / dialogue_bm25.pkl
-  character.faiss / character_meta.json / character_bm25.pkl
-  full.faiss / full_meta.json / full_bm25.pkl
-  plot.faiss / plot_meta.json / plot_bm25.pkl
-  actor_index.json / director_index.json / genre_index.json
-  character_index.json / location_index.json / registry.json
-```
+Pipeline steps can be triggered via `POST /pipeline/{step}` — the step runs as a background subprocess and writes output to `pipeline.log`. The registry is loaded at startup and stays in memory; after re-indexing, call `POST /reload` to pick up the new registry without restarting.
 
 ---
 
-## Current corpus
+## Known issues
 
-51 movies — 6,455 scenes — 1,251,415 words — 44,643 dialogue lines
+**Corpus quality.** Some PDFs are image-only scans (no extractable text), CID-encoded (garbled characters), or FYC awards screener versions with non-standard formatting. These are detected by zero or near-zero scene counts and excluded from the manifest manually.
 
-Includes: Harry Potter series (6 films), Pirates of the Caribbean (4 films),
-Lord of the Rings (3 films), Fantastic Beasts (3 films), Tarantino filmography
-(8 films), and recent releases (2023-2025).
+**Ratatouille.** The available PDF is an FYC version with no INT./EXT. scene headings. The parser finds zero scenes. Needs replacement.
+
+**Short scenes.** Very short scenes (1-2 action lines) produce weak embeddings that match almost anything. No mitigation currently.
+
+**BM25 refit cost.** BM25Okapi requires the full corpus at fit time — IDF is computed over all documents. Adding new movies means refitting from scratch. The FAISS index supports `add()` natively. Incremental BM25 is handled by storing the tokenized corpus in the pickle alongside the model object so refitting only requires loading the old corpus and appending.
+
+---
+
+## Corpus
+
+93 movies — scene, dialogue, character, full, and plot indices.

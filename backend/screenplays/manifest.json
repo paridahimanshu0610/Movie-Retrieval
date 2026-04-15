@@ -1,0 +1,467 @@
+{
+  "baby-driver-2017.pdf": {
+    "tmdb_id": "339403",
+    "title": "Baby Driver",
+    "slug": "baby_driver"
+  },
+  "interstellar-2014.pdf": {
+    "tmdb_id": "157336",
+    "title": "Interstellar",
+    "slug": "Interstellar"
+  },
+  "dune-2021.pdf": {
+    "tmdb_id": "438631",
+    "title": "Dune (2021)",
+    "slug": "dune_2021"
+  },
+  "bruce-almighty.txt": {
+    "tmdb_id": "310",
+    "title": "Bruce Almighty",
+    "slug": "bruce_almighty"
+  },
+  "harry-potter-and-the-chamber-of-secrets.pdf": {
+    "tmdb_id": "672",
+    "title": "Harry Potter and The Chamber of Secrets",
+    "slug": "harry_potter_and_the_chamber_of_secrets"
+  },
+  "2012.html": {
+    "tmdb_id": "14161",
+    "title": "2012",
+    "slug": "2012"
+  },
+  "a-real-pain-2024.pdf": {
+    "tmdb_id": "1013850",
+    "title": "A Real Pain",
+    "slug": "a_real_pain"
+  },
+  "anora-2024.pdf": {
+    "tmdb_id": "1064213",
+    "title": "Anora",
+    "slug": "anora"
+  },
+  "better-man-2024.pdf": {
+    "tmdb_id": "799766",
+    "title": "Better Man",
+    "slug": "better_man"
+  },
+  "bugonia-2025.pdf": {
+    "tmdb_id": "701387",
+    "title": "Bugonia",
+    "slug": "bugonia"
+  },
+  "deadpool-and-wolverine-2024.pdf": {
+    "tmdb_id": "533535",
+    "title": "Deadpool and Wolverine",
+    "slug": "deadpool_and_wolverine"
+  },
+  "eternal-sunshine-of-the-spotless-mind.txt": {
+    "tmdb_id": "38",
+    "title": "Eternal Sunshine of the Spotless Mind",
+    "slug": "eternal_sunshine_of_the_spotless_mind"
+  },
+  "f1-2025.pdf": {
+    "tmdb_id": "911430",
+    "title": "F1",
+    "slug": "f1"
+  },
+  "fantastic-beasts-and-where-to-find-them-2016.pdf": {
+    "tmdb_id": "259316",
+    "title": "Fantastic Beasts and Where to Find Them",
+    "slug": "fantastic_beasts_and_where_to_find_them"
+  },
+  "fantastic-beasts-the-crimes-of-grindelwald-2018.pdf": {
+    "tmdb_id": "338952",
+    "title": "Fantastic Beasts: The Crimes of Grindelwald",
+    "slug": "fantastic_beasts_the_crimes_of_grindelwald"
+  },
+  "fantastic-beasts-the-secrets-of-dumbledore-2022.pdf": {
+    "tmdb_id": "338953",
+    "title": "Fantastic Beasts: The Secrets of Dumbledore",
+    "slug": "fantastic_beasts_the_secrets_of_dumbledore"
+  },
+  "john-wick-chapter-4-2023.pdf": {
+    "tmdb_id": "603692",
+    "title": "John Wick: Chapter 4",
+    "slug": "john_wick_chapter_4"
+  },
+  "lord-of-the-rings-the-fellowship-of-the-ring.pdf": {
+    "tmdb_id": "120",
+    "title": "The Lord of the Rings: The Fellowship of the Ring",
+    "slug": "lord_of_the_rings_the_fellowship_of_the_ring"
+  },
+  "lord-of-the-rings-the-return-of-the-king.txt": {
+    "tmdb_id": "122",
+    "title": "The Lord of the Rings: The Return of the King",
+    "slug": "lord_of_the_rings_the_return_of_the_king"
+  },
+  "lord-of-the-rings-the-two-towers.pdf": {
+    "tmdb_id": "121",
+    "title": "The Lord of the Rings: The Two Towers",
+    "slug": "lord_of_the_rings_the_two_towers"
+  },
+  "marty-supreme-2025.pdf": {
+    "tmdb_id": "1317288",
+    "title": "Marty Supreme",
+    "slug": "marty_supreme"
+  },
+  "no-hard-feelings-2023.pdf": {
+    "tmdb_id": "884605",
+    "title": "No Hard Feelings",
+    "slug": "no_hard_feelings"
+  },
+  "nosferatu-2025.pdf": {
+    "tmdb_id": "426063",
+    "title": "Nosferatu",
+    "slug": "nosferatu"
+  },
+  "red-one-2024.pdf": {
+    "tmdb_id": "845781",
+    "title": "Red One",
+    "slug": "red_one"
+  },
+  "sinners-2025.pdf": {
+    "tmdb_id": "1233413",
+    "title": "Sinners",
+    "slug": "sinners"
+  },
+  "the-beekeeper-2024.pdf": {
+    "tmdb_id": "866398",
+    "title": "The Beekeeper",
+    "slug": "the_beekeeper"
+  },
+  "the-brutalist-2024.pdf": {
+    "tmdb_id": "549509",
+    "title": "The Brutalist",
+    "slug": "the_brutalist"
+  },
+  "the-substance-2024.pdf": {
+    "tmdb_id": "933260",
+    "title": "The Substance",
+    "slug": "the_substance"
+  },
+  "wicked-2024.pdf": {
+    "tmdb_id": "402431",
+    "title": "Wicked",
+    "slug": "wicked"
+  },
+  "wonka-2023.pdf": {
+    "tmdb_id": "787699",
+    "title": "Wonka",
+    "slug": "wonka"
+  },
+  "death-proof-2007.pdf": {
+    "tmdb_id": "1991",
+    "title": "Death Proof",
+    "slug": "death_proof"
+  },
+  "django-unchained-2012.pdf": {
+    "tmdb_id": "68718",
+    "title": "Django Unchained",
+    "slug": "django_unchained"
+  },
+  "four-rooms-1995.pdf": {
+    "tmdb_id": "5",
+    "title": "Four Rooms",
+    "slug": "four_rooms"
+  },
+  "from-dusk-till-dawn-1996.pdf": {
+    "tmdb_id": "755",
+    "title": "From Dusk Till Dawn",
+    "slug": "from_dusk_till_dawn"
+  },
+  "harry-potter-and-the-deathly-hollows-part-2-2011.pdf": {
+    "tmdb_id": "12445",
+    "title": "Harry Potter and the Deathly Hallows Part 2",
+    "slug": "harry_potter_and_the_deathly_hallows_part_2"
+  },
+  "harry-potter-and-the-half-blood-prince-2009.pdf": {
+    "tmdb_id": "767",
+    "title": "Harry Potter and the Half-Blood Prince",
+    "slug": "harry_potter_and_the_half_blood_prince"
+  },
+  "harry-potter-and-the-prisoner-of-azkaban-2004.pdf": {
+    "tmdb_id": "673",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "slug": "harry_potter_and_the_prisoner_of_azkaban"
+  },
+  "harry-potter-and-the-sorcerers-stone-2001.pdf": {
+    "tmdb_id": "671",
+    "title": "Harry Potter and the Sorcerer's Stone",
+    "slug": "harry_potter_and_the_sorcerers_stone"
+  },
+  "inglourious-bastards-2009.pdf": {
+    "tmdb_id": "16869",
+    "title": "Inglourious Basterds",
+    "slug": "inglourious_basterds"
+  },
+  "jackie-brown-1997.pdf": {
+    "tmdb_id": "184",
+    "title": "Jackie Brown",
+    "slug": "jackie_brown"
+  },
+  "kill-bill-vol-1-2003.pdf": {
+    "tmdb_id": "24",
+    "title": "Kill Bill: Volume 1",
+    "slug": "kill_bill_vol_1"
+  },
+  "kill-bill-vol-2-2004.pdf": {
+    "tmdb_id": "393",
+    "title": "Kill Bill: Volume 2",
+    "slug": "kill_bill_vol_2"
+  },
+  "pirates-of-the-caribbean-dead-mans-chest-2006.pdf": {
+    "tmdb_id": "58",
+    "title": "Pirates of the Caribbean: Dead Man's Chest",
+    "slug": "pirates_of_the_caribbean_dead_mans_chest"
+  },
+  "pirates-of-the-caribbean-dead-men-tell-no-tales-2017.pdf": {
+    "tmdb_id": "166426",
+    "title": "Pirates of the Caribbean: Dead Men Tell No Tales",
+    "slug": "pirates_of_the_caribbean_dead_men_tell_no_tales"
+  },
+  "pirates-of-the-caribbean-on-stranger-tides-2011.pdf": {
+    "tmdb_id": "1865",
+    "title": "Pirates of the Caribbean: On Stranger Tides",
+    "slug": "pirates_of_the_caribbean_on_stranger_tides"
+  },
+  "pirates-of-the-caribbean-the-curse-of-the-black-pearl-2003.pdf": {
+    "tmdb_id": "22",
+    "title": "Pirates of the Caribbean: The Curse of the Black Pearl",
+    "slug": "pirates_of_the_caribbean_the_curse_of_the_black_pearl"
+  },
+  "pulp-fiction-1994.pdf": {
+    "tmdb_id": "680",
+    "title": "Pulp Fiction",
+    "slug": "pulp_fiction"
+  },
+  "reservoir-dogs-1992.pdf": {
+    "tmdb_id": "500",
+    "title": "Reservoir Dogs",
+    "slug": "reservoir_dogs"
+  },
+  "true-romance-1993.pdf": {
+    "tmdb_id": "319",
+    "title": "True Romance",
+    "slug": "true_romance"
+  },
+  "harry-potter-and-the-deathly-hallows-part-1-2010.pdf": {
+    "tmdb_id": "12444",
+    "title": "Harry Potter and the Deathly Hallows Part 1",
+    "slug": "harry_potter_and_the_deathly_hallows_part_1"
+  },
+  "the-ballad-of-buster-scruggs.pdf": {
+    "tmdb_id": "537996",
+    "title": "The Ballad of Buster Scruggs",
+    "slug": "the_ballad_of_buster_scruggs"
+  },
+  "black-panther-2018.pdf": {
+    "tmdb_id": "284054",
+    "title": "Black Panther",
+    "slug": "black_panther"
+  },
+  "black-panther-wakanda-forever-2022.pdf": {
+    "tmdb_id": "505642",
+    "title": "Black Panther Wakanda Forever",
+    "slug": "black_panther_wakanda_forever"
+  },
+  "blade-1998.pdf": {
+    "tmdb_id": "36647",
+    "title": "Blade",
+    "slug": "blade"
+  },
+  "coco-2017.pdf": {
+    "tmdb_id": "354912",
+    "title": "Coco",
+    "slug": "coco"
+  },
+  "dream-scenario-2023.pdf": {
+    "tmdb_id": "823482",
+    "title": "Dream Scenario",
+    "slug": "dream_scenario"
+  },
+  "finding-nemo-2003.pdf": {
+    "tmdb_id": "12",
+    "title": "Finding Nemo",
+    "slug": "finding_nemo"
+  },
+  "get-out-2017.pdf": {
+    "tmdb_id": "419430",
+    "title": "Get Out",
+    "slug": "get_out"
+  },
+  "ghost-rider-2007.pdf": {
+    "tmdb_id": "1250",
+    "title": "Ghost Rider",
+    "slug": "ghost_rider"
+  },
+  "guardians-of-the-galaxy-vol-2-2017.pdf": {
+    "tmdb_id": "283995",
+    "title": "Guardians of the Galaxy Vol 2",
+    "slug": "guardians_of_the_galaxy_vol_2"
+  },
+  "iron-claw-2023.pdf": {
+    "tmdb_id": "850165",
+    "title": "Iron Claw",
+    "slug": "iron_claw"
+  },
+  "iron-man-2008.pdf": {
+    "tmdb_id": "1726",
+    "title": "Iron Man",
+    "slug": "iron_man"
+  },
+  "joker-2019.pdf": {
+    "tmdb_id": "475557",
+    "title": "Joker",
+    "slug": "joker"
+  },
+  "killers-of-the-flower-moon-2023.pdf": {
+    "tmdb_id": "466420",
+    "title": "Killers of the Flower Moon",
+    "slug": "killers_of_the_flower_moon"
+  },
+  "logan-2017.pdf": {
+    "tmdb_id": "263115",
+    "title": "Logan",
+    "slug": "logan"
+  },
+  "megamind-2010.pdf": {
+    "tmdb_id": "38055",
+    "title": "Megamind",
+    "slug": "megamind"
+  },
+  "midsommar-2019.pdf": {
+    "tmdb_id": "530385",
+    "title": "Midsommar",
+    "slug": "midsommar"
+  },
+  "monsters-inc-2001.pdf": {
+    "tmdb_id": "585",
+    "title": "Monsters Inc",
+    "slug": "monsters_inc"
+  },
+  "monsters-university-2013.pdf": {
+    "tmdb_id": "62211",
+    "title": "Monsters University",
+    "slug": "monsters_university"
+  },
+  "nope-2022.pdf": {
+    "tmdb_id": "762504",
+    "title": "Nope",
+    "slug": "nope"
+  },
+  "ratatouille-2007.pdf": {
+    "tmdb_id": "2062",
+    "title": "Ratatouille",
+    "slug": "ratatouille"
+  },
+  "spider-man-2002.pdf": {
+    "tmdb_id": "557",
+    "title": "Spider Man",
+    "slug": "spider_man"
+  },
+  "spider-man-across-the-spider-verse-2023.pdf": {
+    "tmdb_id": "569094",
+    "title": "Spider Man Across the Spider Verse",
+    "slug": "spider_man_across_the_spider_verse"
+  },
+  "spider-man-into-the-spider-verse-2018.pdf": {
+    "tmdb_id": "324857",
+    "title": "Spider Man Into the Spider Verse",
+    "slug": "spider_man_into_the_spider_verse"
+  },
+  "suicide-squad-2016.pdf": {
+    "tmdb_id": "297761",
+    "title": "Suicide Squad",
+    "slug": "suicide_squad"
+  },
+  "the-accountant-2016.pdf": {
+    "tmdb_id": "302946",
+    "title": "The Accountant",
+    "slug": "the_accountant"
+  },
+  "the-avengers-2012.pdf": {
+    "tmdb_id": "24428",
+    "title": "The Avengers",
+    "slug": "the_avengers"
+  },
+  "the-dark-knight-rises-2012.pdf": {
+    "tmdb_id": "49026",
+    "title": "The Dark Knight Rises",
+    "slug": "the_dark_knight_rises"
+  },
+  "the-incredibles-2004.pdf": {
+    "tmdb_id": "9806",
+    "title": "The Incredibles",
+    "slug": "the_incredibles"
+  },
+  "the-lighthouse-2019.pdf": {
+    "tmdb_id": "503919",
+    "title": "The Lighthouse",
+    "slug": "the_lighthouse"
+  },
+  "the-whale-2022.pdf": {
+    "tmdb_id": "785084",
+    "title": "The Whale",
+    "slug": "the_whale"
+  },
+  "the-wolverine-2013.pdf": {
+    "tmdb_id": "76170",
+    "title": "The Wolverine",
+    "slug": "the_wolverine"
+  },
+  "thor-2011.pdf": {
+    "tmdb_id": "10195",
+    "title": "Thor",
+    "slug": "thor"
+  },
+  "toy-story-3-2010.pdf": {
+    "tmdb_id": "10193",
+    "title": "Toy Story 3",
+    "slug": "toy_story_3"
+  },
+  "toy-story-4-2019.pdf": {
+    "tmdb_id": "301528",
+    "title": "Toy Story 4",
+    "slug": "toy_story_4"
+  },
+  "uncut-gems-2019.pdf": {
+    "tmdb_id": "473033",
+    "title": "Uncut Gems",
+    "slug": "uncut_gems"
+  },
+  "under-the-silver-lake-2018.pdf": {
+    "tmdb_id": "396461",
+    "title": "Under the Silver Lake",
+    "slug": "under_the_silver_lake"
+  },
+  "up-2009.pdf": {
+    "tmdb_id": "14160",
+    "title": "Up",
+    "slug": "up"
+  },
+  "us-2019.pdf": {
+    "tmdb_id": "458723",
+    "title": "Us",
+    "slug": "us"
+  },
+  "wall-e-2008.pdf": {
+    "tmdb_id": "1525542",
+    "title": "Wall E",
+    "slug": "wall_e"
+  },
+  "wonder-woman-2017.pdf": {
+    "tmdb_id": "297762",
+    "title": "Wonder Woman",
+    "slug": "wonder_woman"
+  },
+  "captain-america-the-first-avenger-2011.pdf": {
+    "tmdb_id": "1771",
+    "title": "Captain America: The First Avenger",
+    "slug": "captain_america_the_first_avenger"
+  },
+  "thor-ragnarok-2017.pdf": {
+    "tmdb_id": "284053",
+    "title": "Thor: Ragnarok",
+    "slug": "thor_ragnarok"
+  }
+}

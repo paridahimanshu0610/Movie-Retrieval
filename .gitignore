@@ -9,15 +9,23 @@ __pycache__/
 venv/
 env/
 
-# Generated pipeline outputs (rebuild with: python main.py)
-output/
-indices/
-screenplays/converted/
+# Generated pipeline outputs (rebuild with: python backend/main.py)
+backend/output/
+backend/indices/
+backend/screenplays/converted/
 
 # Screenplay source files (PDF/HTML/TXT — large, often copyrighted)
-screenplays/*.pdf
-screenplays/*.html
-screenplays/*.txt
+backend/screenplays/*.pdf
+backend/screenplays/*.html
+backend/screenplays/*.txt
+
+# Backend logs
+backend/pipeline.log
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
 
 # OS
 .DS_Store
