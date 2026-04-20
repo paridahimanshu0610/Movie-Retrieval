@@ -9,6 +9,8 @@ Endpoints:
   GET  /movies              List all movies in corpus
   GET  /movies/{movie_id}   Single movie detail by TMDB ID
   POST /pipeline/{step}     Trigger a pipeline step in the background
+  GET  /video_query         Query the video retrieval pipeline (GET)
+  POST /video_query         Query the video retrieval pipeline (POST)
 
 Run with:
   uvicorn api:app --reload --port 8000
@@ -17,13 +19,14 @@ Interactive docs at http://localhost:8000/docs
 """
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from dotenv import load_dotenv
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Query as FastAPIQuery, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -40,6 +43,9 @@ import retriever as ret
 from intent_classifier import classify_query
 
 ret.INDEX_DIR = INDEX_DIR
+
+from video_config import LLM_MODEL_PATH, LLM_N_GPU_LAYERS, TOP_K
+from video_retriever.video_retrieval_pipeline import RetrievalPipeline
 
 # ── Pipeline step registry (mirrors main.py STEPS) ───────────────────────────
 
@@ -116,9 +122,34 @@ def _load_registry() -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _get_bool_env(name: str, default: bool) -> bool:
+    raw_value = os.getenv(name)
+    if raw_value is None:
+        return default
+    return raw_value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _get_int_env(name: str, default: int) -> int:
+    raw_value = os.getenv(name)
+    if raw_value is None:
+        return default
+    return int(raw_value)
+
+
 @app.on_event("startup")
 def startup():
     app.state.registry = _load_registry()
+
+    use_llm = _get_bool_env("MOVIE_RETRIEVAL_USE_LLM", True)
+    llm_model_path = os.getenv("MOVIE_RETRIEVAL_LLM_MODEL_PATH", LLM_MODEL_PATH)
+    n_gpu_layers = _get_int_env("MOVIE_RETRIEVAL_LLM_N_GPU_LAYERS", LLM_N_GPU_LAYERS)
+
+    app.state.use_llm = use_llm
+    app.state.pipeline = RetrievalPipeline(
+        llm_model_path=llm_model_path,
+        n_gpu_layers=n_gpu_layers,
+        use_llm=use_llm,
+    )
 
 
 # ── Pydantic models ───────────────────────────────────────────────────────────
@@ -205,6 +236,25 @@ class PipelineResponse(BaseModel):
     step:    str
     status:  str
     message: str
+
+class VideoQueryRequest(BaseModel):
+    query: str = Field(..., min_length=1, description="Natural-language scene query.")
+    top_k: int = Field(default=TOP_K, ge=1, description="Number of results to return.")
+
+class VideoSearchResult(BaseModel):
+    doc_id:          str
+    clip_id:         str
+    movie:           str
+    field_type:      str
+    score:           float
+    content:         str
+    youtube_link:    str
+    timestamp:       str
+    description:     str
+    rrf_score:       float | None = None
+    matched_fields:  list[str] | None = None
+    retrieval_rank:  int | None = None
+    llm_rerank_rank: int | None = None
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -300,6 +350,20 @@ def _format_results(raw_results: list, top_k: int, registry: dict) -> list[Movie
             scene_ids = scene_ids,
         ))
     return out
+
+
+def _run_video_query(request: Request, query: str, top_k: int) -> list[dict[str, Any]]:
+    """Shared logic for GET and POST /video_query."""
+    normalized_query = query.strip()
+    if not normalized_query:
+        raise HTTPException(status_code=422, detail="Query must not be empty.")
+
+    pipeline = getattr(request.app.state, "pipeline", None)
+    if pipeline is None:
+        raise HTTPException(status_code=503, detail="Retrieval pipeline is not loaded.")
+
+    response = pipeline.query(normalized_query, top_k=top_k)
+    return response["results"]
 
 
 def _run_pipeline_step(step_name: str, dry_run: bool):
@@ -433,6 +497,23 @@ def run_pipeline(step: str, req: PipelineRequest, background_tasks: BackgroundTa
         status  = "started",
         message = f"Step '{step}' is running in the background. Output is appended to pipeline.log.",
     )
+
+
+@app.get("/video_query", response_model=list[VideoSearchResult], summary="Query video retrieval pipeline")
+def video_query_get(
+    request: Request,
+    query: str = FastAPIQuery(..., min_length=1),
+    top_k: int = FastAPIQuery(TOP_K, ge=1),
+) -> list[dict[str, Any]]:
+    return _run_video_query(request, query=query, top_k=top_k)
+
+
+@app.post("/video_query", response_model=list[VideoSearchResult], summary="Query video retrieval pipeline")
+def video_query_post(
+    payload: VideoQueryRequest,
+    request: Request,
+) -> list[dict[str, Any]]:
+    return _run_video_query(request, query=payload.query, top_k=payload.top_k)
 
 
 if __name__ == "__main__":
