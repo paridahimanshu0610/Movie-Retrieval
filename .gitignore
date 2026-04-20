@@ -7,6 +7,11 @@
 __pycache__/
 *.py[cod]
 *.pyo
+*.png
+*.jpg
+*.jpeg
+*.log
+*.mp4
 *.egg-info/
 .venv/
 venv/
@@ -47,3 +52,7 @@ desktop.ini
 # Misc
 *.zip
 "folders not pushed to repo.zip"
+artifacts/
+chroma_db/
+hf_cache/
+data/
