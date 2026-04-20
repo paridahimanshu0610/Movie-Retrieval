@@ -21,7 +21,7 @@ CHROMA_COLLECTION_NAME = "movie_clips"
 # ── Local LLM (llama-cpp-python) ───────────────────────────────────────────────
 # Absolute path to your .gguf model file.
 # Recommended: qwen2.5-7b-instruct-q8_0 (better JSON compliance than Llama 3.1 8B)
-LLM_MODEL_PATH = "/Users/himanshu/Documents/Projects/policy-and-compliance-reasoning/models/qwen2.5-7b-instruct-q8_0-00001-of-00003.gguf"   # ← set this before running query.py
+LLM_MODEL_PATH = BASE_DIR / "inference_models" / "qwen2.5-7b-instruct-q8_0-00001-of-00003.gguf"
 
 # Number of model layers to offload to GPU (0 = CPU only).
 LLM_N_GPU_LAYERS = -1
