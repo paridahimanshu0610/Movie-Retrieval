@@ -32,6 +32,8 @@ The pipeline can be initialised in two modes:
 
 from __future__ import annotations
 
+from threading import RLock
+
 from config import BM25_INDEX_PATH, LLM_MODEL_PATH, LLM_N_GPU_LAYERS, TOP_K
 from indexer.bm25_indexer import BM25Indexer
 from indexer.embedder import Embedder
@@ -60,6 +62,7 @@ class RetrievalPipeline:
 
         self._embedder = Embedder()
         self._chroma = ChromaRetriever(self._embedder)
+        self._query_lock = RLock()
 
         bm25_index = BM25Indexer.load(BM25_INDEX_PATH)
         self._bm25 = BM25Retriever(bm25_index)
@@ -106,6 +109,14 @@ class RetrievalPipeline:
             matched_fields, youtube_link, timestamp, description, content,
             retrieval_rank, llm_rerank_rank
         """
+        # The shared llama.cpp instance is reused across router + reranker,
+        # so keep full-query execution single-threaded when the pipeline is
+        # shared by a long-lived FastAPI process.
+        with self._query_lock:
+            return self._query_unlocked(user_query=user_query, top_k=top_k)
+
+    def _query_unlocked(self, user_query: str, top_k: int = TOP_K) -> dict:
+        """Internal query implementation. Callers should hold `_query_lock`."""
         # ── Step 1: Intent extraction ──────────────────────────────────────────
         if self._router is not None:
             intent = self._router.route(user_query)

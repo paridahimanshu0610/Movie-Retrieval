@@ -28,6 +28,15 @@ from config import LLM_MODEL_PATH, LLM_N_GPU_LAYERS, TOP_K
 from pipeline import RetrievalPipeline
 
 
+def run_query(
+    pipeline: RetrievalPipeline,
+    query: str,
+    top_k: int = TOP_K,
+) -> dict:
+    """Execute one retrieval query against an already-initialized pipeline."""
+    return pipeline.query(query, top_k=top_k)
+
+
 # ── CLI ────────────────────────────────────────────────────────────────────────
 
 def parse_args() -> argparse.Namespace:
@@ -133,8 +142,8 @@ def main() -> None:
         use_llm=use_llm,
     )
 
-    def run_query(q: str) -> None:
-        response = pipeline.query(q, top_k=args.top_k)
+    def print_query_results(q: str) -> None:
+        response = run_query(pipeline, q, top_k=args.top_k)
         if args.output_json:
             print(json.dumps(response, indent=2, ensure_ascii=False))
         else:
@@ -142,7 +151,7 @@ def main() -> None:
 
     if args.query:
         # Non-interactive single query
-        run_query(args.query)
+        print_query_results(args.query)
     else:
         # Interactive REPL
         print("\nMovie Scene Retrieval System")
@@ -160,7 +169,7 @@ def main() -> None:
                 print("Exiting.")
                 break
 
-            run_query(user_input)
+            print_query_results(user_input)
 
 
 if __name__ == "__main__":

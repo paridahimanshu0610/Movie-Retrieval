@@ -31,6 +31,10 @@ google-generativeai>=0.3.0  # For Gemini
 chromadb>=0.5.0
 rank-bm25>=0.2.2
 
+# API
+fastapi>=0.115.0
+uvicorn>=0.30.0
+
 # Local LLM inference (intent router)
 llama-cpp-python>=0.2.90
 
