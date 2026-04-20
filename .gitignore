@@ -12,6 +12,7 @@ __pycache__/
 *.jpeg
 *.log
 *.mp4
+*.pkl
 *.egg-info/
 .venv/
 venv/
