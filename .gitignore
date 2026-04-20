@@ -1,0 +1,42 @@
+# Environment and local config
+.env
+.env.*
+.venv/
+venv/
+env/
+
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.png
+*.pkl
+.Python
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE and OS files
+.DS_Store
+.vscode/
+.idea/
+
+# Project artifacts
+artifacts/
+
+# Data and model files
+data/
+clips/
+hf_cache/
+chroma_db/

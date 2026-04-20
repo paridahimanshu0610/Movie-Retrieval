@@ -1,0 +1,41 @@
+# Core
+numpy>=1.24.0
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+Pillow>=9.0.0
+tqdm>=4.65.0
+pyyaml>=6.0
+
+# Video Processing
+opencv-python>=4.7.0
+decord>=0.6.0
+
+# Models
+transformers>=4.45.0
+sentence-transformers>=2.2.0
+accelerate>=0.25.0
+
+# Transcription (choose one)
+openai-whisper>=20231117
+whisperx>=3.0.0
+pyannote.audio>=3.0.0
+pyannote.pipeline>=3.0.0
+# faster-whisper>=0.10.0  # Alternative, faster
+
+# VLM APIs (install based on provider)
+openai>=1.0.0  # For GPT-4o
+google-generativeai>=0.3.0  # For Gemini
+
+# Core retrieval
+chromadb>=0.5.0
+rank-bm25>=0.2.2
+
+# Local LLM inference (intent router)
+llama-cpp-python>=0.2.90
+
+# Optional: Scene detection
+scenedetect>=0.6.0
+
+# Optional: Audio processing
+# ffmpeg-python>=0.2.0

@@ -1,0 +1,305 @@
+# Scene-Based Movie Retrieval — Minimal Test
+
+A minimal, end-to-end implementation of the dual-index scene retrieval system,
+runnable on **Mac M4** (MPS) with 2–3 short video clips.
+
+---
+
+## Architecture
+
+```
+Video clip
+  │
+  ├─► extract_frames (8 frames, uniform)
+  │
+  ├─► VisualEmbedder (InternVideo2-CLIP │ CLIP ViT-L/14)
+  │       └─► visual embedding  (L2-norm)  ──► Visual Index
+  │
+  └─► CaptionGenerator (BLIP-2 │ LLaVA-Video)
+        + TranscriptExtractor (Whisper-small)
+        └─► combined text  ──► TextEmbedder (Sentence-BERT)
+                └─► text embedding  (L2-norm)  ──► Text Index
+
+Query (natural language)
+  │
+  └─► TextEmbedder → query vector
+        │
+        ├─► cosine search Visual Index  → ranked list A
+        ├─► cosine search Text Index    → ranked list B
+        └─► Reciprocal Rank Fusion (RRF k=60)
+              └─► merged results
+```
+
+---
+
+## 1 — Setup
+
+```bash
+# Create and activate a virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# PyTorch with MPS (already included via pip above, but verify):
+python -c "import torch; print(torch.backends.mps.is_available())"  # should print True
+```
+
+---
+
+## 2 — Get sample clips
+
+You need **2–3 short `.mp4` clips** (30 s – 3 min each) placed in `./clips/`.
+
+**Naming convention:** `<movie_name>_<number>.mp4`
+```
+clips/
+  interstellar_01.mp4
+  interstellar_02.mp4
+  gravity_01.mp4
+```
+
+### Option A — Download with yt-dlp (YouTube clips)
+
+```bash
+pip install yt-dlp
+
+# For video (mp4):
+yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4" \
+  --download-sections "*00:15:40-00:16:20" \
+  --force-keyframes-at-cuts \
+  --merge-output-format mp4 \
+  -o "clips/harry_potter_03.%(ext)s" \
+  "https://www.youtube.com/watch?v=K7flEBPuQmY"
+```
+
+### Option B — Use ffmpeg to cut clips you already have
+
+```bash
+# Cut 90 seconds starting at 5:00 from a local file
+ffmpeg -ss 00:05:00 -t 00:01:30 -i source_movie.mp4 -c copy clips/interstellar_01.mp4
+```
+
+### Option C — Use the CondensedMovies dataset (production)
+
+```bash
+# Download the dataset manifest and clips from the official source:
+# https://www.robots.ox.ac.uk/~vgg/research/condensed-movies/
+```
+
+---
+
+## 3 — Build the index
+
+```bash
+python build_index.py
+```
+
+This:
+1. Loads InternVideo2-CLIP (or falls back to CLIP ViT-L/14)
+2. Loads BLIP-2 (or LLaVA-Video)
+3. Loads Whisper-small
+4. Loads Sentence-BERT
+5. Processes every `.mp4` in `./clips/`
+6. Saves the index to `./index/`
+
+**Expected runtime** on M4 with 2 clips (~90 s each): 5–15 minutes depending on model choice.
+
+---
+
+## 4 — Query the index
+
+```bash
+# Single query
+python query.py "a character walking alone through a dark corridor"
+
+# Interactive mode
+python query.py
+```
+
+---
+
+## 5 — Swap models
+
+Edit `config.py`:
+
+| Setting           | Test (default)      | Production                        |
+|-------------------|---------------------|-----------------------------------|
+| `VISUAL_BACKBONE` | `"internvideo2"`    | same (InternVideo2-CLIP-1B)       |
+| `CAPTION_MODEL`   | `"blip2"`           | `"llava_video"` (needs ~15 GB)    |
+| `WHISPER_SIZE`    | `"small"`           | `"medium"` or `"large-v3"`        |
+| `SBERT_MODEL`     | `"all-mpnet-base-v2"` | same or `"multi-qa-mpnet-base-cos-v1"` |
+
+---
+
+## 6 Commands to set-up environment on TAMU HPRC Grace
+
+Link: https://chatgpt.com/s/t_69db34a78d9481919f6a111e2f103a05
+
+Step 1: Navigate to the project directory
+
+Step 2: Load modules (every new session)
+```
+module purge
+module load GCCcore/13.3.0 Python/3.12.3
+module load CUDA/12.6.0
+module load FFmpeg/7.0.2
+```
+
+Step 3: Create venv INSIDE your project
+```
+python -m venv /scratch/user/paridahimanshu0610/ISR/venv
+```
+
+Step 4: Activate it:
+```
+source /scratch/user/paridahimanshu0610/ISR/venv/bin/activate
+```
+
+Step 5: Upgrade pip
+```
+pip install --upgrade pip
+```
+
+Step 6: Install EXACT libraries (Qwen-compatible)
+```
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+```
+
+Then: Transformers (IMPORTANT — from GitHub)
+```
+pip install git+https://github.com/huggingface/transformers accelerate
+```
+
+Then Qwen Utilities (as per official docs)
+```
+pip install "qwen-vl-utils[decord]==0.0.8"
+```
+
+Optional but useful
+```
+pip install pillow safetensors einops
+```
+
+Step 7: Set cache to scratch (VERY IMPORTANT)
+```
+export HF_HOME=/scratch/user/paridahimanshu0610/ISR/hf_cache
+export TRANSFORMERS_CACHE=/scratch/user/paridahimanshu0610/ISR/hf_cache
+```
+
+Step 8: Add kernel to Jupyter
+```
+pip install ipykernel
+python -m ipykernel install --user --name isr-venv --display-name "Python (ISR-venv)"
+```
+
+To reserve a session with GPU, execute:
+```
+srun --partition=gpu \
+     --gres=gpu:a100:1 \
+     --mem=64G \
+     --ntasks=1 \
+     --time=03:00:00 \
+     --pty bash
+``` 
+
+## Commands to execute any script on TAMU HPRC Grace:
+
+Step 1: First, reserve a session:
+```
+srun --partition=gpu \
+     --gres=gpu:a100:1 \
+     --mem=64G \
+     --ntasks=1 \
+     --time=03:00:00 \
+     --pty bash
+``` 
+
+Step 2: Navigate to the project directory in scratch:
+```
+cd /scratch/user/paridahimanshu0610/ISR
+```
+
+Step 3: Load all the modules:
+```
+module purge
+module load GCCcore/13.3.0 Python/3.12.3
+module load CUDA/12.6.0
+module load FFmpeg/7.0.2
+```
+
+Step 4: Activate the environment:
+```
+source /scratch/user/paridahimanshu0610/ISR/venv/bin/activate
+```
+
+Step 5: Then navigate to the scripts folder and execute the script (.py file) using:
+```
+cd scripts
+python final_clip_describer.py
+```
+
+Sequence in which the scripts must be executed:
+1. transcriber.py (Run it locally and copy the file: `outputs/clip_transcript.json` to the `outputs` folder on HPRC)
+2. captioner.py 
+3. caption_aggregator.py
+4. transcript_analyzer.py
+5. final_clip_describer.py
+6. merge_data.py
+
+---
+
+## File structure
+
+```
+scene_retrieval/
+│
+├── main.py                   # Single entry point (build + query)
+│
+├── config.py                 # Unchanged — no imports from local modules
+│
+├── core/
+│   ├── __init__.py
+│   ├── video_processor.py    # Frame extraction
+│   └── indexer.py            # DualIndex + RRF + Retriever
+│
+├── embedders/
+│   ├── __init__.py
+│   ├── visual_embedder.py    # InternVideo2 / CLIP
+│   └── text_embedder.py      # BLIP-2/LLaVA + Whisper + SBERT
+│
+├── pipeline/
+│   ├── __init__.py
+│   ├── build_index.py        # Ingestion pipeline
+│   └── query.py              # Search interface
+│
+├── clips/                    # Your .mp4 files go here
+├── index/                    # Generated by build_index.py
+│
+├── requirements.txt
+└── README.md
+```
+
+## Sample Queries and expected result:
+- **Query:** massive volcano eruption and people fleeing the scene  
+  **Expected clip:** supervolcano_eruption, 2012
+
+- **Query:** massive wave hitting a mountain  
+  **Expected clip:** himalayan_tsunami, 2012
+
+- **Query:** astronaut mistaking mountain for a wave  
+  **Expected clip:** gigantic_wave, Interstellar
+
+- **Query:** chaos with intense anger and dark humor during a violent physical confrontation  
+  **Expected clip:** wolverine_and_deadpool_fight_deadpool_corps, Deadpool & Wolverine
+
+- **Query:** intense scene with a large pot in a graveyard  
+  **Expected clip:** voldemort_returns, Harry Potter and the Goblet of Fire
+
+- **Query:** fight sequence with spear in an ocean  
+  **Expected clip:** wakandans_vs_talokanil_final_battle, Black Panther: Wakanda Forever
+
+## Reference Links:
+
+1. https://claude.ai/chat/0f27d89a-cc83-4023-9e66-e4b6b51b0612
