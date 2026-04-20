@@ -58,3 +58,4 @@ chroma_db/
 video_chroma_db/
 hf_cache/
 data/
+inference_models/
