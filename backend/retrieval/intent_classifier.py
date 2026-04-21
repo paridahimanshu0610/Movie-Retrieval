@@ -219,16 +219,7 @@ def _validate_plan(raw: dict) -> dict:
 
 
 def classify_query(query: str, env_path: Path | None = None) -> dict:
-    """
-    Classify a query and return a full QueryPlan dict.
-
-    Args:
-        query:    Natural-language query.
-        env_path: Path to .env file with TAMU_AI_CHAT_API_KEY.
-
-    Returns:
-        QueryPlan dict (always valid; falls back to _DEFAULT_PLAN on error).
-    """
+    """Classify a query and return a QueryPlan dict. Falls back to _DEFAULT_PLAN on error."""
     api_key = _load_api_key(env_path)
     if not api_key:
         logger.warning("TAMU_AI_CHAT_API_KEY not set — using default plan")
@@ -252,7 +243,7 @@ def classify_query(query: str, env_path: Path | None = None) -> dict:
                 "model":       TAMU_AI_MODEL,
                 "stream":      False,
                 "messages":    messages,
-                "max_tokens":  4096,
+                "max_tokens":  2048,
                 "temperature": 1,
             },
             timeout=20,
@@ -286,11 +277,6 @@ def classify_query(query: str, env_path: Path | None = None) -> dict:
             pass
 
     return dict(_DEFAULT_PLAN)
-
-
-def classify_intent(query: str, env_path: Path | None = None) -> list[str]:
-    """Backward-compatible wrapper — returns just the intents list."""
-    return classify_query(query, env_path=env_path)["intents"]
 
 
 if __name__ == "__main__":

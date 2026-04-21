@@ -197,3 +197,22 @@ python retrieval/retriever.py --query "..." --mode bm25 --top-k 10
 93 movies — scene, dialogue, character, full, and plot indices.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full system design.
+
+---
+
+## Future improvements
+
+**Scene description index**
+Generate a natural-language description of each scene during parsing, while the raw screenplay block is still intact. Pass the unstructured text (action lines and dialogue interleaved) to a lightweight LLM (Gemini 2.0 Flash Lite is a strong candidate at ~$0.001 per scene) and store the result as a `description` field in the scene JSON. Build a separate `scene_desc` FAISS + BM25 index from these descriptions. This index would handle complex action queries that the raw scene index struggles with — queries that describe a situation, an emotional context, or a spatial relationship rather than a keyword that appears verbatim in the screenplay.
+
+**Corpus expansion**
+Current corpus is 93 movies. Target is 200. Incremental indexing is already implemented — adding a new screenplay only reprocesses that movie and extends the existing indices without a full rebuild.
+
+**Query feedback loop**
+Log queries that return zero results or low-confidence scores. Use that data to identify gaps in the corpus (missing movies) or weaknesses in the intent classifier (query types that route to the wrong index).
+
+**Re-ranking with a cross-encoder**
+The current pipeline uses bi-encoder embeddings (all-MiniLM-L6-v2) for FAISS and BM25 for keyword matching, fused via RRF. A cross-encoder re-ranker applied to the top-20 results would improve precision for ambiguous queries, at the cost of latency.
+
+**Location index integration**
+`location_index.json` is built but not wired into the retriever. Queries that name a specific setting ("a diner," "a rooftop in New York") could use it to pre-filter candidates the same way the genre and year filters work now.

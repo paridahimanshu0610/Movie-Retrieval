@@ -176,6 +176,8 @@ def main():
     ap.add_argument("--output-dir",  default="../output")
     ap.add_argument("--slug",        default=None,
                     help="Process a single movie slug instead of all")
+    ap.add_argument("--incremental", action="store_true",
+                    help="Skip movies whose characters file already exists.")
     args = ap.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -190,6 +192,12 @@ def main():
 
     total_matched = total_unmatched = 0
     for slug in slugs:
+        if args.incremental:
+            output_path = os.path.join(args.output_dir, f"{slug}_characters.json")
+            if os.path.exists(output_path):
+                logger.info("[SKIP] %s: already reconciled", slug)
+                continue
+
         results = reconcile_movie(slug, args.scenes_dir, args.output_dir)
         total_matched   += sum(1 for r in results if r["match_type"] != "unmatched")
         total_unmatched += sum(1 for r in results if r["match_type"] == "unmatched")

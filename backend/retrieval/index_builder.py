@@ -19,11 +19,15 @@ Structured JSON inverted indices:
 Each dense/sparse index is stored as:
   {name}.faiss       — FAISS flat inner-product index (cosine on normalized vecs)
   {name}_meta.json   — list of payload dicts in index order
-  {name}_bm25.pkl    — serialized BM25Okapi + payloads
+  {name}_bm25.pkl    — serialized BM25Okapi + payloads + tokenized corpus
 
 Usage:
   python index_builder.py --manifest ../screenplays/manifest.json \\
       --input-dir ../output --index-dir ../indices
+
+  # Only process new movies (skips already-indexed slugs)
+  python index_builder.py --manifest ../screenplays/manifest.json \\
+      --input-dir ../output --index-dir ../indices --incremental
 
   # Sample set (two movies for testing)
   python index_builder.py --sample
@@ -95,33 +99,75 @@ def tokenize(text: str) -> list:
 
 
 def _build_dense_bm25(texts: list, payloads: list, name: str,
-                      index_dir: Path, model: SentenceTransformer) -> None:
-    logger.info("  %s: %d documents", name, len(texts))
+                      index_dir: Path, model: SentenceTransformer,
+                      incremental: bool = False) -> None:
+    faiss_path = index_dir / f"{name}.faiss"
+    meta_path  = index_dir / f"{name}_meta.json"
+    bm25_path  = index_dir / f"{name}_bm25.pkl"
 
-    embeddings = model.encode(
-        texts,
-        normalize_embeddings=True,
-        show_progress_bar=False,
-        batch_size=64,
-    ).astype(np.float32)
-    dim = embeddings.shape[1]
-    faiss_index = faiss.IndexFlatIP(dim)
-    faiss_index.add(embeddings)
-    faiss.write_index(faiss_index, str(index_dir / f"{name}.faiss"))
-    (index_dir / f"{name}_meta.json").write_text(
-        json.dumps(payloads, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
-    logger.info("    FAISS saved (%d vectors, dim=%d)", faiss_index.ntotal, dim)
+    new_tokenized = [tokenize(t) for t in texts]
 
-    tokenized = [tokenize(t) for t in texts]
-    bm25 = BM25Okapi(tokenized)
-    with open(index_dir / f"{name}_bm25.pkl", "wb") as f:
-        pickle.dump({"bm25": bm25, "meta": payloads}, f)
-    logger.info("    BM25 saved")
+    if incremental and faiss_path.exists() and bm25_path.exists():
+        logger.info("  %s: appending %d new documents (incremental)", name, len(texts))
+
+        # Extend FAISS index with new vectors
+        existing_index = faiss.read_index(str(faiss_path))
+        new_embeddings = model.encode(
+            texts,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+            batch_size=64,
+        ).astype(np.float32)
+        existing_index.add(new_embeddings)
+        faiss.write_index(existing_index, str(faiss_path))
+        logger.info("    FAISS updated (%d total vectors)", existing_index.ntotal)
+
+        # Load existing corpus + meta, extend, refit BM25
+        with open(bm25_path, "rb") as f:
+            existing_data = pickle.load(f)
+        old_corpus = existing_data.get("corpus", [])
+        old_meta   = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else existing_data.get("meta", [])
+
+        combined_corpus = old_corpus + new_tokenized
+        combined_meta   = old_meta + payloads
+        combined_bm25   = BM25Okapi(combined_corpus)
+
+        meta_path.write_text(
+            json.dumps(combined_meta, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        with open(bm25_path, "wb") as f:
+            pickle.dump({"bm25": combined_bm25, "meta": combined_meta, "corpus": combined_corpus}, f)
+        logger.info("    BM25 refit on %d total documents", len(combined_corpus))
+
+    else:
+        if incremental:
+            logger.info("  %s: no existing index found, doing full build", name)
+        logger.info("  %s: %d documents", name, len(texts))
+
+        embeddings = model.encode(
+            texts,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+            batch_size=64,
+        ).astype(np.float32)
+        dim = embeddings.shape[1]
+        faiss_index = faiss.IndexFlatIP(dim)
+        faiss_index.add(embeddings)
+        faiss.write_index(faiss_index, str(faiss_path))
+        meta_path.write_text(
+            json.dumps(payloads, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        logger.info("    FAISS saved (%d vectors, dim=%d)", faiss_index.ntotal, dim)
+
+        bm25 = BM25Okapi(new_tokenized)
+        with open(bm25_path, "wb") as f:
+            pickle.dump({"bm25": bm25, "meta": payloads, "corpus": new_tokenized}, f)
+        logger.info("    BM25 saved")
 
 
 def build_scene_indices(scenes: list, index_dir: Path,
-                        model: SentenceTransformer) -> None:
+                        model: SentenceTransformer,
+                        incremental: bool = False) -> None:
     for index_name, builder in SCENE_BUILDERS.items():
         logger.info("Building scene index: %s", index_name)
         texts, payloads = [], []
@@ -136,21 +182,27 @@ def build_scene_indices(scenes: list, index_dir: Path,
                 "text":     text,
             })
             texts.append(text)
-        _build_dense_bm25(texts, payloads, index_name, index_dir, model)
+        _build_dense_bm25(texts, payloads, index_name, index_dir, model, incremental=incremental)
 
 
 def build_plot_index(manifest: dict, input_dir: Path, index_dir: Path,
-                     model: SentenceTransformer) -> dict:
-    """
-    Build the plot index from TMDB overview fields (one document per movie).
-    Returns the registry dict mapping movie_id to metadata.
-    """
-    logger.info("Building plot index from TMDB overviews...")
+                     model: SentenceTransformer,
+                     new_slugs: set | None = None,
+                     incremental: bool = False) -> dict:
+    logger.info("Building plot index...")
     texts, payloads = [], []
     registry = {}
 
+    registry_path = index_dir / "registry.json"
+    if incremental and registry_path.exists():
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+
     for filename, entry in manifest.items():
-        slug      = entry["slug"]
+        slug = entry["slug"]
+
+        if new_slugs is not None and slug not in new_slugs:
+            continue
+
         meta_path = input_dir / f"{slug}_metadata.json"
         if not meta_path.exists():
             logger.warning("  No metadata for %s, skipping plot index entry", slug)
@@ -161,6 +213,10 @@ def build_plot_index(manifest: dict, input_dir: Path, index_dir: Path,
         title    = meta.get("title", entry.get("title", ""))
         year     = (meta.get("release_date") or "")[:4]
         overview = meta.get("overview", "").strip()
+
+        # Prefer Wikipedia plot over TMDB overview — it's longer and describes
+        # actual plot beats rather than marketing copy.
+        plot_text = (meta.get("wiki_plot") or overview).strip()
 
         registry[movie_id] = {
             "title":      title,
@@ -173,21 +229,25 @@ def build_plot_index(manifest: dict, input_dir: Path, index_dir: Path,
             "tmdb_url":   meta.get("tmdb_url", ""),
         }
 
-        if overview:
-            texts.append(overview)
+        if plot_text:
+            source = "wiki" if meta.get("wiki_plot") else "tmdb"
+            logger.info("  %s: using %s plot (%d chars)", slug, source, len(plot_text))
+            texts.append(plot_text)
             payloads.append({
                 "movie_id": movie_id,
                 "title":    title,
                 "slug":     slug,
-                "overview": overview,
+                "overview": plot_text,
             })
 
-    _build_dense_bm25(texts, payloads, "plot", index_dir, model)
+    _build_dense_bm25(texts, payloads, "plot", index_dir, model, incremental=incremental)
     return registry
 
 
 def build_structured_indices(manifest: dict, input_dir: Path,
-                              index_dir: Path) -> None:
+                              index_dir: Path,
+                              new_slugs: set | None = None,
+                              incremental: bool = False) -> None:
     logger.info("Building structured indices...")
 
     actor_index     = defaultdict(list)
@@ -196,8 +256,29 @@ def build_structured_indices(manifest: dict, input_dir: Path,
     character_index = defaultdict(list)
     location_index  = defaultdict(list)
 
+    # In incremental mode, load existing indices and merge new entries into them
+    if incremental:
+        def _load_existing(name):
+            path = index_dir / name
+            return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+
+        for k, v in _load_existing("actor_index.json").items():
+            actor_index[k] = v
+        for k, v in _load_existing("director_index.json").items():
+            director_index[k] = v
+        for k, v in _load_existing("genre_index.json").items():
+            genre_index[k] = v
+        for k, v in _load_existing("character_index.json").items():
+            character_index[k] = v
+        for k, v in _load_existing("location_index.json").items():
+            location_index[k] = v
+
     for filename, entry in manifest.items():
-        slug        = entry["slug"]
+        slug = entry["slug"]
+
+        if new_slugs is not None and slug not in new_slugs:
+            continue
+
         meta_path   = input_dir / f"{slug}_metadata.json"
         chars_path  = input_dir / f"{slug}_characters.json"
         scenes_path = input_dir / f"{slug}_scenes.json"
@@ -261,11 +342,11 @@ def build_structured_indices(manifest: dict, input_dir: Path,
     _save(location_index,  "location_index.json")
 
 
-def load_scenes(input_dir: Path, sample_slugs: set | None = None) -> list:
+def load_scenes(input_dir: Path, filter_slugs: set | None = None) -> list:
     all_scenes = []
     for path in sorted(input_dir.glob("*_scenes.json")):
         slug = path.stem.replace("_scenes", "")
-        if sample_slugs and slug not in sample_slugs:
+        if filter_slugs is not None and slug not in filter_slugs:
             continue
         scenes = json.loads(path.read_text(encoding="utf-8"))
         all_scenes.extend(scenes)
@@ -273,43 +354,73 @@ def load_scenes(input_dir: Path, sample_slugs: set | None = None) -> list:
     return all_scenes
 
 
+def _get_new_slugs(manifest: dict, index_dir: Path) -> set:
+    """Return slugs present in manifest but not yet in registry.json."""
+    registry_path = index_dir / "registry.json"
+    if not registry_path.exists():
+        return {entry["slug"] for entry in manifest.values()}
+    registry  = json.loads(registry_path.read_text(encoding="utf-8"))
+    indexed   = {info["slug"] for info in registry.values()}
+    all_slugs = {entry["slug"] for entry in manifest.values()}
+    return all_slugs - indexed
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Build all retrieval indices.")
-    ap.add_argument("--manifest",   default="../screenplays/manifest.json")
-    ap.add_argument("--input-dir",  default="../output")
-    ap.add_argument("--index-dir",  default="../indices")
-    ap.add_argument("--sample",     action="store_true", help="Use sample set only (2 movies)")
-    ap.add_argument("--model",      default=EMBED_MODEL)
+    ap.add_argument("--manifest",    default="../screenplays/manifest.json")
+    ap.add_argument("--input-dir",   default="../output")
+    ap.add_argument("--index-dir",   default="../indices")
+    ap.add_argument("--sample",      action="store_true", help="Use sample set only (2 movies)")
+    ap.add_argument("--incremental", action="store_true",
+                    help="Only index new movies not yet in registry.json")
+    ap.add_argument("--model",       default=EMBED_MODEL)
     args = ap.parse_args()
 
-    input_dir  = Path(args.input_dir)
-    index_dir  = Path(args.index_dir)
+    input_dir = Path(args.input_dir)
+    index_dir = Path(args.index_dir)
     index_dir.mkdir(parents=True, exist_ok=True)
 
     manifest = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
+
     if args.sample:
         manifest = {k: v for k, v in manifest.items()
                     if v["slug"] in SAMPLE_SLUGS}
 
-    sample_slugs = set(v["slug"] for v in manifest.values()) if args.sample else None
+    if args.incremental:
+        new_slugs = _get_new_slugs(manifest, index_dir)
+        if not new_slugs:
+            print("Nothing new to index — all manifest entries are already indexed.")
+            return
+        logger.info("Incremental mode: %d new slug(s) to index: %s",
+                    len(new_slugs), ", ".join(sorted(new_slugs)))
+        filter_slugs = new_slugs
+    else:
+        new_slugs    = None
+        filter_slugs = set(v["slug"] for v in manifest.values()) if args.sample else None
 
     logger.info("Loading embedding model: %s", args.model)
     model = SentenceTransformer(args.model)
 
-    scenes = load_scenes(input_dir, sample_slugs)
+    scenes = load_scenes(input_dir, filter_slugs)
     if not scenes:
         logger.error("No scenes loaded. Check --input-dir.")
         sys.exit(1)
-    logger.info("Total scenes: %d", len(scenes))
-    build_scene_indices(scenes, index_dir, model)
+    logger.info("Total scenes to index: %d", len(scenes))
+    build_scene_indices(scenes, index_dir, model, incremental=args.incremental)
 
-    registry = build_plot_index(manifest, input_dir, index_dir, model)
+    registry = build_plot_index(
+        manifest, input_dir, index_dir, model,
+        new_slugs=new_slugs, incremental=args.incremental,
+    )
     (index_dir / "registry.json").write_text(
         json.dumps(registry, indent=2, ensure_ascii=False), encoding="utf-8"
     )
-    logger.info("Registry saved (%d movies)", len(registry))
+    logger.info("Registry saved (%d movies total)", len(registry))
 
-    build_structured_indices(manifest, input_dir, index_dir)
+    build_structured_indices(
+        manifest, input_dir, index_dir,
+        new_slugs=new_slugs, incremental=args.incremental,
+    )
 
     print(f"\nDone. Indices written to: {index_dir}")
     print(f"  Scene indices (FAISS+BM25): scene, dialogue, character, full, plot")

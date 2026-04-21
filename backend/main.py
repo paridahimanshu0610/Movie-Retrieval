@@ -14,6 +14,7 @@ Usage:
   python main.py --from convert                     # start from a specific step
   python main.py --only index                       # run a single step
   python main.py --dry-run                          # preview without writing
+  python main.py --from parse --incremental         # only process new movies
 
   python main.py --query "car chase with loud music"
   python main.py --query "what are you listening to" --intent dialogue
@@ -103,7 +104,7 @@ STEPS = [
 STEP_NAMES = [s["name"] for s in STEPS]
 
 
-def run_step(step: dict, dry_run: bool = False) -> bool:
+def run_step(step: dict, dry_run: bool = False, incremental: bool = False) -> bool:
     print(f"\n{'='*60}")
     print(f"  {step['label']}")
     print(f"{'='*60}")
@@ -111,6 +112,8 @@ def run_step(step: dict, dry_run: bool = False) -> bool:
     cmd = [sys.executable, str(step["script"])] + step["args"]
     if dry_run and step["supports_dry_run"]:
         cmd.append("--dry-run")
+    if incremental and step.get("supports_incremental"):
+        cmd.append("--incremental")
 
     result = subprocess.run(cmd, cwd=str(step["script"].parent))
     if result.returncode != 0:
@@ -272,6 +275,10 @@ def main():
         "--dry-run", action="store_true",
         help="Pass --dry-run to steps that support it (sync, fetch).",
     )
+    ap.add_argument(
+        "--incremental", action="store_true",
+        help="Pass --incremental to steps that support it (parse, reconcile, index).",
+    )
     args = ap.parse_args()
 
     if args.query:
@@ -289,7 +296,7 @@ def main():
     print(f"Running {len(steps_to_run)} step(s): {', '.join(s['name'] for s in steps_to_run)}")
 
     for step in steps_to_run:
-        ok = run_step(step, dry_run=args.dry_run)
+        ok = run_step(step, dry_run=args.dry_run, incremental=args.incremental)
         if not ok:
             sys.exit(1)
 

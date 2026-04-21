@@ -2,13 +2,16 @@
 retriever.py — Query the indices and return ranked movies.
 
 Retrieval pipeline:
-  1. Entity extraction — scan query for actor/director names in structured indices;
-     matched movies receive a strong score boost so they surface even when the
-     screenplay text never mentions the actor's real name.
-  2. Text search      — FAISS (dense) and/or BM25 (sparse) over scene/plot indices.
-  3. RRF fusion       — combine rankings from multiple indices.
-  4. Movie aggregation — group scene hits by movie, sum RRF scores.
-  5. Entity boost     — add ENTITY_BOOST to aggregated score for entity-matched movies.
+  1. Entity extraction  — scan query for actor/director names; use matched
+                          movie IDs as a pre-filter rather than a score boost.
+  2. Text search        — FAISS (dense) and/or BM25 (sparse) over scene/plot
+                          indices, run in parallel via ThreadPoolExecutor.
+  3. RRF fusion         — combine rankings from multiple indices.
+  4. Movie aggregation  — group scene hits by movie, sum RRF scores.
+
+Indices are loaded into memory once at startup via preload_indices() and
+reused across all queries. Call clear_index_cache() before reloading after
+a pipeline run.
 
 Usage:
     python retriever.py --query "the boy receives letters from a magic school"
@@ -25,18 +28,20 @@ import pickle
 import re
 import sys
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-INDEX_DIR   = Path(__file__).parent.parent / "indices"
-EMBED_MODEL = "all-MiniLM-L6-v2"
+INDEX_DIR     = Path(__file__).parent.parent / "indices"
+EMBED_MODEL   = "all-MiniLM-L6-v2"
 VALID_INTENTS = ("scene", "dialogue", "character", "full", "plot")
 
-# Score added to any movie whose actor/director appears in the query.
-# RRF scores typically range 0.01–0.10, so 0.5 reliably surfaces entity matches
-# while still allowing text scores to break ties among multiple entity matches.
-ENTITY_BOOST = 0.5
-
 _model = None
+
+_faiss_cache:    dict = {}
+_meta_cache:     dict = {}
+_bm25_cache:     dict = {}
+_registry_cache: dict = {}
+_genre_cache:    dict = {}
 
 
 def _get_model():
@@ -48,23 +53,60 @@ def _get_model():
     return _model
 
 
+def preload_indices() -> None:
+    """Load all indices into memory. Call once at API startup."""
+    import faiss as _faiss
+
+    for name in VALID_INTENTS:
+        fp = INDEX_DIR / f"{name}.faiss"
+        mp = INDEX_DIR / f"{name}_meta.json"
+        bp = INDEX_DIR / f"{name}_bm25.pkl"
+
+        if fp.exists() and mp.exists():
+            _faiss_cache[name] = _faiss.read_index(str(fp))
+            _meta_cache[name]  = json.loads(mp.read_text(encoding="utf-8"))
+
+        if bp.exists():
+            with open(bp, "rb") as f:
+                _bm25_cache[name] = pickle.load(f)
+
+    reg = INDEX_DIR / "registry.json"
+    if reg.exists():
+        _registry_cache.update(json.loads(reg.read_text(encoding="utf-8")))
+
+    gi = INDEX_DIR / "genre_index.json"
+    if gi.exists():
+        _genre_cache.update(json.loads(gi.read_text(encoding="utf-8")))
+
+
+def clear_index_cache() -> None:
+    """Clear in-memory index cache. Call before reloading after re-indexing."""
+    _faiss_cache.clear()
+    _meta_cache.clear()
+    _bm25_cache.clear()
+    _registry_cache.clear()
+    _genre_cache.clear()
+
+
 def tokenize(text: str) -> list:
     return re.sub(r"[^a-z0-9 ]", " ", text.lower()).split()
 
 
 def search_faiss(query: str, index_name: str, top_k: int = 20) -> list:
     """Returns list of (score, meta_dict) sorted by descending score."""
-    import faiss
     import numpy as np
 
-    index_path = INDEX_DIR / f"{index_name}.faiss"
-    meta_path  = INDEX_DIR / f"{index_name}_meta.json"
-
-    if not index_path.exists():
-        raise FileNotFoundError(f"Index not found: {index_path}")
-
-    index = faiss.read_index(str(index_path))
-    meta  = json.loads(meta_path.read_text(encoding="utf-8"))
+    if index_name in _faiss_cache:
+        index = _faiss_cache[index_name]
+        meta  = _meta_cache[index_name]
+    else:
+        import faiss
+        index_path = INDEX_DIR / f"{index_name}.faiss"
+        meta_path  = INDEX_DIR / f"{index_name}_meta.json"
+        if not index_path.exists():
+            raise FileNotFoundError(f"Index not found: {index_path}")
+        index = faiss.read_index(str(index_path))
+        meta  = json.loads(meta_path.read_text(encoding="utf-8"))
 
     q_vec = _get_model().encode([query], normalize_embeddings=True).astype(np.float32)
     scores, indices = index.search(q_vec, min(top_k, index.ntotal))
@@ -74,13 +116,14 @@ def search_faiss(query: str, index_name: str, top_k: int = 20) -> list:
 
 def search_bm25(query: str, index_name: str, top_k: int = 20) -> list:
     """Returns list of (score, meta_dict) sorted by descending score."""
-    bm25_path = INDEX_DIR / f"{index_name}_bm25.pkl"
-
-    if not bm25_path.exists():
-        raise FileNotFoundError(f"BM25 index not found: {bm25_path}")
-
-    with open(bm25_path, "rb") as f:
-        data = pickle.load(f)
+    if index_name in _bm25_cache:
+        data = _bm25_cache[index_name]
+    else:
+        bm25_path = INDEX_DIR / f"{index_name}_bm25.pkl"
+        if not bm25_path.exists():
+            raise FileNotFoundError(f"BM25 index not found: {bm25_path}")
+        with open(bm25_path, "rb") as f:
+            data = pickle.load(f)
 
     bm25   = data["bm25"]
     meta   = data["meta"]
@@ -153,7 +196,7 @@ def extract_entities(query: str) -> tuple[set, list]:
         for name, movie_ids in index.items():
             name_tokens = set(tokenize(name))
             if len(name_tokens) < 2:
-                continue  # skip single-token names to avoid false positives
+                continue
             if name_tokens.issubset(query_tokens):
                 matched_ids.update(movie_ids)
                 matched_names.append(name)
@@ -175,33 +218,24 @@ def _build_allowed_ids(
     genre_filter: str | None,
     year_range: tuple | None,
 ) -> set | None:
-    """
-    Return the set of movie_ids that satisfy genre/year constraints,
-    or None if no constraints are active.
-    Used for pre-filtering before text search so constrained movies
-    are included in fusion even when they rank low on text similarity.
-    """
     if not genre_filter and not year_range:
         return None
 
-    registry   = _load_registry()
     genre_ids: set | None = None
-
     if genre_filter:
-        genre_index = _load_genre_index()
+        source = _genre_cache if _genre_cache else _load_genre_index()
         target = genre_filter.lower()
         matched: set = set()
-        for g, ids in genre_index.items():
+        for g, ids in source.items():
             if target in g or g in target:
                 matched.update(ids)
-        genre_ids = matched if matched else None  # None = no genre match → skip genre constraint
+        genre_ids = matched if matched else None
 
-    allowed: set | None = None
-    if genre_ids is not None:
-        allowed = genre_ids
+    allowed: set | None = genre_ids
 
     if year_range:
         yr_min, yr_max = year_range
+        registry = _registry_cache if _registry_cache else _load_registry()
         year_ids: set = set()
         for mid, info in registry.items():
             try:
@@ -212,18 +246,42 @@ def _build_allowed_ids(
                     continue
                 year_ids.add(mid)
             except (ValueError, TypeError):
-                year_ids.add(mid)  # unknown year → include
+                year_ids.add(mid)
         allowed = (allowed & year_ids) if allowed is not None else year_ids
 
-    return allowed  # None means no constraint
+    return allowed
 
 
 def _apply_exclusions(results: list, exclude_ids: set | None) -> list:
-    """Remove explicitly excluded movies from results (negation queries)."""
     if not exclude_ids:
         return results
     filtered = [r for r in results if r["movie_id"] not in exclude_ids]
-    return filtered if filtered else results  # fail-open if everything excluded
+    return filtered if filtered else results
+
+
+def _run_search(search_pairs: list, mode: str, top_k: int,
+                pool_mult: int, filter_set: set | None) -> list:
+    """Run all (text, intent) pairs in parallel and return aggregated results."""
+    def _search_one(text: str, intent: str) -> list:
+        rankings = []
+        if mode in ("faiss", "hybrid"):
+            hits = search_faiss(text, intent, top_k * pool_mult)
+            if filter_set is not None:
+                hits = [(s, m) for s, m in hits if m.get("movie_id") in filter_set]
+            rankings.append(hits)
+        if mode in ("bm25", "hybrid"):
+            hits = search_bm25(text, intent, top_k * pool_mult)
+            if filter_set is not None:
+                hits = [(s, m) for s, m in hits if m.get("movie_id") in filter_set]
+            rankings.append(hits)
+        return rankings
+
+    all_rankings = []
+    with ThreadPoolExecutor() as pool:
+        futures = [pool.submit(_search_one, text, intent) for text, intent in search_pairs]
+        for f in futures:
+            all_rankings.extend(f.result())
+    return all_rankings
 
 
 def retrieve(
@@ -241,12 +299,11 @@ def retrieve(
         query:        natural-language query (used when sub_queries is None)
         intents:      list of index names to search (default: ["full"])
         mode:         "faiss" | "bm25" | "hybrid" (default)
-        top_k:        number of candidates per index before fusion
+        top_k:        number of results to return
         genre_filter: genre name to restrict results (fuzzy match)
         year_range:   (year_min, year_max) tuple; either element may be None
         exclude_ids:  set of movie_ids to remove from results
-        sub_queries:  list of {intent, text} dicts for multi_aspect queries;
-                      each sub-query is routed to its own index with its own text
+        sub_queries:  list of {intent, text} dicts for multi_aspect queries
 
     Returns:
         (results, entity_names)
@@ -256,63 +313,41 @@ def retrieve(
     if intents is None:
         intents = ["full"]
 
-    # Pre-build allowed movie_id set from genre/year constraints so that
-    # text search results are restricted to eligible movies before fusion.
-    # This ensures constrained movies appear in results even if they rank
-    # low on text similarity for the whole corpus.
     allowed_ids = _build_allowed_ids(genre_filter, year_range)
     has_filters = allowed_ids is not None
+    pool_mult   = 8 if has_filters else 2
 
-    # Larger search pool when filtering: we may need many raw hits to find
-    # enough matches within the constrained set.
-    pool_mult = 8 if has_filters else 2
-
-    def _search_one(text: str, intent: str) -> list:
-        """Search a single (text, intent) pair and return pre-filtered hits."""
-        rankings = []
-        if mode in ("faiss", "hybrid"):
-            hits = search_faiss(text, intent, top_k * pool_mult)
-            if allowed_ids is not None:
-                hits = [(s, m) for s, m in hits if m.get("movie_id") in allowed_ids]
-            rankings.append(hits)
-        if mode in ("bm25", "hybrid"):
-            hits = search_bm25(text, intent, top_k * pool_mult)
-            if allowed_ids is not None:
-                hits = [(s, m) for s, m in hits if m.get("movie_id") in allowed_ids]
-            rankings.append(hits)
-        return rankings
-
-    # Text search + pre-filter.
-    # For multi_aspect queries, each sub-query is routed to its own index so
-    # that a movie matching across multiple aspects receives a higher fused
-    # score than one that matches only one aspect.
-    all_rankings = []
-    if sub_queries:
-        for sq in sub_queries:
-            all_rankings.extend(_search_one(sq["text"], sq["intent"]))
-    else:
-        for intent in intents:
-            all_rankings.extend(_search_one(query, intent))
-
-    fused   = rrf_fuse(all_rankings)
-    n_slots = len(sub_queries) if sub_queries else len(intents)
-    results = aggregate_by_movie(fused, top_scenes=top_k * n_slots)
-
-    # Entity boost: actor/director names found in query -> boost matched movies.
-    # Also inject any entity-matched movies cut off during aggregation.
+    # Entity extraction — use matched IDs as a pre-filter, not a score boost
     entity_ids, entity_names = extract_entities(query)
+
     if entity_ids:
-        present_ids = {r["movie_id"] for r in results}
-        for r in results:
-            if r["movie_id"] in entity_ids:
-                r["score"] = round(r["score"] + ENTITY_BOOST, 4)
-        for mid in entity_ids:
-            if mid not in present_ids:
-                results.append({"movie_id": mid, "score": ENTITY_BOOST, "top_scenes": []})
-        results.sort(key=lambda r: r["score"], reverse=True)
+        if allowed_ids is not None:
+            merged = allowed_ids & entity_ids
+            # Fail-open: if intersection is empty the entity filter is too strict
+            effective_allowed = merged if merged else allowed_ids
+        else:
+            effective_allowed = entity_ids
+    else:
+        effective_allowed = allowed_ids
+
+    search_pairs = (
+        [(sq["text"], sq["intent"]) for sq in sub_queries]
+        if sub_queries
+        else [(query, intent) for intent in intents]
+    )
+    n_slots = len(sub_queries) if sub_queries else len(intents)
+
+    all_rankings = _run_search(search_pairs, mode, top_k, pool_mult, effective_allowed)
+    fused        = rrf_fuse(all_rankings)
+    results      = aggregate_by_movie(fused, top_scenes=top_k * n_slots)
+
+    # If entity filter produced no results, retry without it
+    if entity_ids and not results:
+        all_rankings = _run_search(search_pairs, mode, top_k, pool_mult, allowed_ids)
+        fused        = rrf_fuse(all_rankings)
+        results      = aggregate_by_movie(fused, top_scenes=top_k * n_slots)
 
     results = _apply_exclusions(results, exclude_ids)
-
     return results, entity_names
 
 
@@ -336,6 +371,8 @@ def main() -> None:
 
     global INDEX_DIR
     INDEX_DIR = Path(args.index_dir)
+
+    preload_indices()
 
     intents = [i.strip() for i in args.intent.split(",") if i.strip() in VALID_INTENTS]
     if not intents:

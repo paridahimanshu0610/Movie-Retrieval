@@ -38,8 +38,10 @@ def main():
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--input-dir", help="Directory containing raw screenplay files (PDF/HTML/TXT).")
     source.add_argument("--converted-dir", help="Directory of pre-converted TXT files from convert.py.")
-    parser.add_argument("--manifest",   required=True)
-    parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--manifest",    required=True)
+    parser.add_argument("--output-dir",  required=True)
+    parser.add_argument("--incremental", action="store_true",
+                        help="Skip movies whose output file already exists and is non-empty.")
     args = parser.parse_args()
 
     with open(args.manifest, "r", encoding="utf-8") as f:
@@ -56,6 +58,17 @@ def main():
         title   = entry["title"]
         slug    = entry["slug"]
         output_path = os.path.join(args.output_dir, f"{slug}_scenes.json")
+
+        if args.incremental and os.path.isfile(output_path):
+            try:
+                with open(output_path, encoding="utf-8") as f:
+                    existing = json.load(f)
+                if existing:
+                    logger.info("[SKIP] %s: already parsed (%d scenes)", title, len(existing))
+                    succeeded += 1
+                    continue
+            except Exception:
+                pass  # corrupted output — fall through and re-parse
 
         if args.converted_dir:
             filepath = os.path.join(args.converted_dir, f"{slug}.txt")

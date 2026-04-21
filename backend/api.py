@@ -41,7 +41,7 @@ from intent_classifier import classify_query
 
 ret.INDEX_DIR = INDEX_DIR
 
-# ── Pipeline step registry (mirrors main.py STEPS) ───────────────────────────
+# Pipeline steps (mirrors main.py STEPS)
 
 _STEPS = {
     "sync": {
@@ -49,7 +49,8 @@ _STEPS = {
         "script": PARSER_DIR / "manifest_sync.py",
         "args":   ["--screenplays-dir", str(ROOT / "screenplays"),
                    "--manifest",        str(ROOT / "screenplays" / "manifest.json")],
-        "supports_dry_run": True,
+        "supports_dry_run":   True,
+        "supports_incremental": False,
     },
     "fetch": {
         "label":  "Fetch TMDB metadata",
@@ -57,7 +58,8 @@ _STEPS = {
         "args":   ["--manifest",   str(ROOT / "screenplays" / "manifest.json"),
                    "--output-dir", str(ROOT / "output"),
                    "--env",        str(ROOT / ".env")],
-        "supports_dry_run": True,
+        "supports_dry_run":   True,
+        "supports_incremental": False,
     },
     "convert": {
         "label":  "Convert screenplay files to plain-text",
@@ -65,7 +67,8 @@ _STEPS = {
         "args":   ["--input-dir",  str(ROOT / "screenplays"),
                    "--manifest",   str(ROOT / "screenplays" / "manifest.json"),
                    "--output-dir", str(ROOT / "screenplays" / "converted")],
-        "supports_dry_run": False,
+        "supports_dry_run":   False,
+        "supports_incremental": False,
     },
     "parse": {
         "label":  "Parse plain-text into scene JSON",
@@ -73,7 +76,8 @@ _STEPS = {
         "args":   ["--converted-dir", str(ROOT / "screenplays" / "converted"),
                    "--manifest",      str(ROOT / "screenplays" / "manifest.json"),
                    "--output-dir",    str(ROOT / "output")],
-        "supports_dry_run": False,
+        "supports_dry_run":   False,
+        "supports_incremental": True,
     },
     "reconcile": {
         "label":  "Reconcile screenplay character names with TMDB cast",
@@ -81,7 +85,8 @@ _STEPS = {
         "args":   ["--manifest",   str(ROOT / "screenplays" / "manifest.json"),
                    "--scenes-dir", str(ROOT / "output"),
                    "--output-dir", str(ROOT / "output")],
-        "supports_dry_run": False,
+        "supports_dry_run":   False,
+        "supports_incremental": True,
     },
     "index": {
         "label":  "Build retrieval indices",
@@ -89,11 +94,11 @@ _STEPS = {
         "args":   ["--manifest",  str(ROOT / "screenplays" / "manifest.json"),
                    "--input-dir", str(ROOT / "output"),
                    "--index-dir", str(INDEX_DIR)],
-        "supports_dry_run": False,
+        "supports_dry_run":   False,
+        "supports_incremental": True,
     },
 }
 
-# ── App setup ─────────────────────────────────────────────────────────────────
 
 app = FastAPI(
     title="Screenplay Retrieval API",
@@ -119,9 +124,10 @@ def _load_registry() -> dict:
 @app.on_event("startup")
 def startup():
     app.state.registry = _load_registry()
+    ret.preload_indices()
 
 
-# ── Pydantic models ───────────────────────────────────────────────────────────
+# Models
 
 class ClassifyRequest(BaseModel):
     query: str
@@ -199,7 +205,8 @@ class MovieListResponse(BaseModel):
     total:  int
 
 class PipelineRequest(BaseModel):
-    dry_run: bool = False
+    dry_run:     bool = False
+    incremental: bool = False
 
 class PipelineResponse(BaseModel):
     step:    str
@@ -207,7 +214,7 @@ class PipelineResponse(BaseModel):
     message: str
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# Helpers
 
 def _registry_to_summary(movie_id: str, info: dict) -> MovieSummary:
     return MovieSummary(
@@ -302,19 +309,26 @@ def _format_results(raw_results: list, top_k: int, registry: dict) -> list[Movie
     return out
 
 
-def _run_pipeline_step(step_name: str, dry_run: bool):
+def _run_pipeline_step(step_name: str, dry_run: bool, incremental: bool = False):
     """Background task: run a pipeline step subprocess, log to pipeline.log."""
-    step    = _STEPS[step_name]
-    cmd     = [sys.executable, str(step["script"])] + step["args"]
+    step = _STEPS[step_name]
+    cmd  = [sys.executable, str(step["script"])] + step["args"]
     if dry_run and step["supports_dry_run"]:
         cmd.append("--dry-run")
+    if incremental and step["supports_incremental"]:
+        cmd.append("--incremental")
     log_path = ROOT / "pipeline.log"
     with open(log_path, "a", encoding="utf-8") as log:
-        log.write(f"\n=== {step_name} ({'dry-run' if dry_run else 'live'}) ===\n")
+        label = []
+        if dry_run:
+            label.append("dry-run")
+        if incremental:
+            label.append("incremental")
+        log.write(f"\n=== {step_name} ({', '.join(label) or 'live'}) ===\n")
         subprocess.run(cmd, cwd=str(step["script"].parent), stdout=log, stderr=log)
 
 
-# ── Endpoints ─────────────────────────────────────────────────────────────────
+# Endpoints
 
 @app.get("/", summary="Health check")
 def health():
@@ -328,9 +342,11 @@ def health():
     }
 
 
-@app.post("/reload", summary="Reload registry from disk after re-indexing")
+@app.post("/reload", summary="Reload registry and index cache from disk after re-indexing")
 def reload_registry():
     app.state.registry = _load_registry()
+    ret.clear_index_cache()
+    ret.preload_indices()
     return {"status": "ok", "movies": len(app.state.registry)}
 
 
@@ -427,7 +443,7 @@ def run_pipeline(step: str, req: PipelineRequest, background_tasks: BackgroundTa
             status_code=400,
             detail=f"Unknown step '{step}'. Valid steps: {', '.join(_STEPS)}",
         )
-    background_tasks.add_task(_run_pipeline_step, step, req.dry_run, req.incremental)
+    background_tasks.add_task(_run_pipeline_step, step, req.dry_run, req.incremental)  # noqa
     return PipelineResponse(
         step    = step,
         status  = "started",

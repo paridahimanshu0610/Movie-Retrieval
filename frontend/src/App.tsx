@@ -122,10 +122,11 @@ const ENDPOINTS: EndpointDef[] = [
         name: 'step', label: 'Step', type: 'select', default: 'sync',
         options: ['sync', 'fetch', 'convert', 'parse', 'reconcile', 'index'],
       },
-      { name: 'dry_run', label: 'Dry run', type: 'checkbox', default: 'true' },
+      { name: 'dry_run',     label: 'Dry run',     type: 'checkbox', default: 'false' },
+      { name: 'incremental', label: 'Incremental', type: 'checkbox', default: 'true' },
     ],
     buildUrl: (v) => `${API_BASE}/pipeline/${v.step}`,
-    buildBody: (v) => ({ dry_run: v.dry_run === 'true' }),
+    buildBody: (v) => ({ dry_run: v.dry_run === 'true', incremental: v.incremental === 'true' }),
   },
 ]
 

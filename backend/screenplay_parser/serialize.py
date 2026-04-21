@@ -5,13 +5,19 @@ produce final scene objects matching the output schema.
 
 import re
 
-# Protect known abbreviations (Mr., Dr., Lt., etc.) from being treated as
-# sentence boundaries when splitting action blocks into sentences.
 _ABBREVS = re.compile(
     r"\b(?:Mr|Mrs|Ms|Dr|Jr|Sr|Lt|Sgt|Cpl|Pvt|St|Vs|No|Vol|Dept|Ext|Int)\."
     r"\s+[A-Z]",
 )
 _SENT_SPLIT_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z])")
+
+# Lines with fewer than 3 alphabetic characters are OCR artifacts —
+# page numbers, scan noise, stray symbols (e.g. ":2.", "/3", "I~", "'f5").
+# Valid short lines like "BAM!" or "BANG." have at least 3 letters.
+_MIN_ALPHA_CHARS = 3
+
+def _is_ocr_garbage(text: str) -> bool:
+    return sum(1 for c in text if c.isalpha()) < _MIN_ALPHA_CHARS
 
 
 def _split_action_block(block: str) -> list:
@@ -43,7 +49,9 @@ def serialize(raw_scenes: list, tmdb_id: str, slug: str) -> list:
         action_lines = []
         for block in raw.get("action_lines", []):
             if block and block.strip():
-                action_lines.extend(_split_action_block(block))
+                for line in _split_action_block(block):
+                    if not _is_ocr_garbage(line):
+                        action_lines.append(line)
 
         dialogue = [
             {

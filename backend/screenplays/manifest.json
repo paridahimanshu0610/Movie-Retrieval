@@ -149,11 +149,6 @@
     "title": "Wonka",
     "slug": "wonka"
   },
-  "death-proof-2007.pdf": {
-    "tmdb_id": "1991",
-    "title": "Death Proof",
-    "slug": "death_proof"
-  },
   "django-unchained-2012.pdf": {
     "tmdb_id": "68718",
     "title": "Django Unchained",
@@ -198,11 +193,6 @@
     "tmdb_id": "184",
     "title": "Jackie Brown",
     "slug": "jackie_brown"
-  },
-  "kill-bill-vol-1-2003.pdf": {
-    "tmdb_id": "24",
-    "title": "Kill Bill: Volume 1",
-    "slug": "kill_bill_vol_1"
   },
   "kill-bill-vol-2-2004.pdf": {
     "tmdb_id": "393",
@@ -279,11 +269,6 @@
     "title": "Dream Scenario",
     "slug": "dream_scenario"
   },
-  "finding-nemo-2003.pdf": {
-    "tmdb_id": "12",
-    "title": "Finding Nemo",
-    "slug": "finding_nemo"
-  },
   "get-out-2017.pdf": {
     "tmdb_id": "419430",
     "title": "Get Out",
@@ -348,11 +333,6 @@
     "tmdb_id": "762504",
     "title": "Nope",
     "slug": "nope"
-  },
-  "ratatouille-2007.pdf": {
-    "tmdb_id": "2062",
-    "title": "Ratatouille",
-    "slug": "ratatouille"
   },
   "spider-man-2002.pdf": {
     "tmdb_id": "557",
