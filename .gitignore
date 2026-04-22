@@ -40,3 +40,5 @@ data/
 clips/
 hf_cache/
 chroma_db/
+frontend/
+video_chroma_db/
