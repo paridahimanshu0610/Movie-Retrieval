@@ -88,9 +88,10 @@ def _detect_gpu_backend() -> str:
     except ImportError:
         pass
 
-    # If llama-cpp-python was compiled with CUBLAS and n_gpu_layers > 0,
+    # If llama-cpp-python was compiled with CUBLAS and n_gpu_layers != 0,
     # it will use CUDA automatically — trust the caller's config.
-    return "cuda" if LLM_N_GPU_LAYERS > 0 else "cpu"
+    # -1 means "offload all layers", which is also a GPU config.
+    return "cuda" if LLM_N_GPU_LAYERS != 0 else "cpu"
 
 
 def _build_llama_kwargs(n_ctx: int, n_gpu_layers: int, backend: str) -> dict:
@@ -171,7 +172,7 @@ def load_llama_model(
 
     print(f"[{component_name}] Loading model from: {model_path}")
     print(f"[{component_name}] GPU backend: {backend}  |  kwargs: {llama_kwargs}")
-    llm = Llama(model_path=model_path, **llama_kwargs)
+    llm = Llama(model_path=str(model_path), **llama_kwargs)
     print(f"[{component_name}] Model loaded.")
     return llm, backend, llama_kwargs
 

@@ -29,7 +29,22 @@ import re
 import sys
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
+from difflib import SequenceMatcher
 from pathlib import Path
+
+_FUZZY_THRESHOLD = 0.80  # minimum per-token similarity to count as a match
+
+
+def _tokens_fuzzy_match(name_tokens: list[str], query_tokens: list[str]) -> bool:
+    """Return True if every name token has a fuzzy match in query_tokens."""
+    for nt in name_tokens:
+        best = max(
+            (SequenceMatcher(None, nt, qt).ratio() for qt in query_tokens),
+            default=0.0,
+        )
+        if best < _FUZZY_THRESHOLD:
+            return False
+    return True
 
 INDEX_DIR     = Path(__file__).parent.parent / "indices"
 EMBED_MODEL   = "all-MiniLM-L6-v2"
@@ -178,13 +193,14 @@ def extract_entities(query: str) -> tuple[set, list]:
     """
     Scan the query for actor and director names from the structured indices.
 
-    Matches require all name tokens to appear in the query (so "Woody Harrelson"
-    matches only if both "woody" and "harrelson" are present). Single-token names
-    are skipped to avoid false positives on common words.
+    Uses fuzzy per-token matching (threshold=0.80) so minor misspellings like
+    "Tom Henks" still match "Tom Hanks". Single-token names are skipped to
+    avoid false positives on common words.
 
     Returns (matched_movie_ids, matched_names).
     """
-    query_tokens = set(tokenize(query))
+    query_tokens = list(tokenize(query))
+    query_token_set = set(query_tokens)
     matched_ids: set = set()
     matched_names: list = []
 
@@ -194,12 +210,17 @@ def extract_entities(query: str) -> tuple[set, list]:
             continue
         index = json.loads(path.read_text(encoding="utf-8"))
         for name, movie_ids in index.items():
-            name_tokens = set(tokenize(name))
+            name_tokens = list(tokenize(name))
             if len(name_tokens) < 2:
                 continue
-            if name_tokens.issubset(query_tokens):
+            # Fast path: exact token match
+            if set(name_tokens).issubset(query_token_set):
                 matched_ids.update(movie_ids)
                 matched_names.append(name)
+            # Slow path: fuzzy match for misspellings
+            elif _tokens_fuzzy_match(name_tokens, query_tokens):
+                matched_ids.update(movie_ids)
+                matched_names.append(f"{name} (fuzzy)")
 
     return matched_ids, matched_names
 
