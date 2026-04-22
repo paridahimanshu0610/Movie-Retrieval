@@ -126,11 +126,22 @@ def fetch_movie_metadata(tmdb_id: str, token: str) -> dict:
 
 # ── Wikipedia helpers ─────────────────────────────────────────────────────────
 
-def _wiki_get(params: dict) -> dict:
+_WIKI_MAX_WAIT = 30  # never wait more than 30s; skip and let the caller retry later
+
+def _wiki_get(params: dict, retries: int = 3) -> dict:
     params.setdefault("format", "json")
-    resp = requests.get(WIKI_API, params=params, headers=WIKI_HEADERS, timeout=10)
-    resp.raise_for_status()
-    return resp.json()
+    for attempt in range(retries):
+        resp = requests.get(WIKI_API, params=params, headers=WIKI_HEADERS, timeout=10)
+        if resp.status_code == 429:
+            requested = int(resp.headers.get("Retry-After", 2 ** (attempt + 1)))
+            wait = min(requested, _WIKI_MAX_WAIT)
+            logger.warning("Wikipedia rate limited (Retry-After=%ds), waiting %ds (attempt %d)...",
+                           requested, wait, attempt + 1)
+            time.sleep(wait)
+            continue
+        resp.raise_for_status()
+        return resp.json()
+    raise RuntimeError(f"Wikipedia API failed after {retries} attempts")
 
 
 def _strip_wikitext(text: str) -> str:
@@ -316,7 +327,12 @@ def run(manifest_path: str, output_dir: str, token: str, dry_run: bool = False):
             logger.info("  [Wiki] Already have plot for '%s', skipping", title)
             meta["wiki_plot"] = existing_wiki_plot
         elif not dry_run:
-            meta["wiki_plot"] = fetch_wiki_plot(title, year)
+            # Use canonical TMDB title + year for Wikipedia — more reliable than manifest title
+            tmdb_title = meta.get("title") or title
+            tmdb_year = meta.get("release_date", "")[:4] or year
+            meta["wiki_plot"] = fetch_wiki_plot(tmdb_title, tmdb_year)
+            if meta["wiki_plot"]:
+                time.sleep(1.0)  # be polite to Wikipedia between successful fetches
 
         results[slug] = meta
 

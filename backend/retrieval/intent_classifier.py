@@ -93,7 +93,7 @@ full      All fields combined            → broad or ambiguous queries
 dialogue       → ["dialogue"]
 simple_scene   → ["scene"]
 complex_scene  → ["scene", "full"]
-detailed_scene → ["scene", "dialogue"]
+detailed_scene → ["scene"] (add "dialogue" only if the query explicitly mentions speech or a quote)
 event_journey  → ["scene", "full"]
 plot_level     → ["plot"]
 similarity     → ["plot", "full"]

@@ -259,8 +259,12 @@ function SearchPage() {
     <main className="search-page">
       <div className="shell">
         <section className="hero">
-          <span className="eyebrow">Movie Retrieval</span>
-          <h1>Hunt down the movie moment, on page or on screen.</h1>
+          <span className="eyebrow">CineSearch</span>
+          <h1>
+            Describe anything you remember —<br />
+            a scene, a quote, a plot, a character, a feeling.<br />
+            We'll find the movie.
+          </h1>
         </section>
 
         <section className="search-panel">

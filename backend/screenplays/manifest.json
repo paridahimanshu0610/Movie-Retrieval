@@ -443,5 +443,60 @@
     "tmdb_id": "284053",
     "title": "Thor: Ragnarok",
     "slug": "thor_ragnarok"
+  },
+  "devils-advocate-1997.pdf": {
+    "tmdb_id": "1813",
+    "title": "Devils Advocate",
+    "slug": "devils_advocate"
+  },
+  "erin-brockovich-2000.txt": {
+    "tmdb_id": "462",
+    "title": "Erin Brockovich",
+    "slug": "erin_brockovich"
+  },
+  "forrest-gump-1994.txt": {
+    "tmdb_id": "13",
+    "title": "Forrest Gump",
+    "slug": "forrest_gump"
+  },
+  "goodfellas-1990.txt": {
+    "tmdb_id": "769",
+    "title": "Goodfellas",
+    "slug": "goodfellas"
+  },
+  "jurassic-park-1993.txt": {
+    "tmdb_id": "329",
+    "title": "Jurassic Park",
+    "slug": "jurassic_park"
+  },
+  "legally-blonde-2001.pdf": {
+    "tmdb_id": "8835",
+    "title": "Legally Blonde",
+    "slug": "legally_blonde"
+  },
+  "men-in-black-1997.txt": {
+    "tmdb_id": "607",
+    "title": "Men in Black",
+    "slug": "men_in_black"
+  },
+  "no-country-for-old-men-2007.txt": {
+    "tmdb_id": "6977",
+    "title": "No Country for Old Men",
+    "slug": "no_country_for_old_men"
+  },
+  "oceans-11-2001.pdf": {
+    "tmdb_id": "225633",
+    "title": "Oceans 11",
+    "slug": "oceans_11"
+  },
+  "the-shawshank-redemption-1994.txt": {
+    "tmdb_id": "278",
+    "title": "The Shawshank Redemption",
+    "slug": "the_shawshank_redemption"
+  },
+  "dead-poets-society-1989.txt": {
+    "tmdb_id": "207",
+    "title": "Dead Poets Society",
+    "slug": "dead_poets_society"
   }
 }

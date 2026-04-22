@@ -28,6 +28,29 @@ _SHOT_KEYWORDS = frozenset([
 _CHAR_SUFFIX_RE = re.compile(r"\s*\(.*?\)\s*$")
 _PAREN_RE = re.compile(r"^\s*\([^)]+\)\s*$")
 
+# Dual-column translation annotations injected by PDF-to-text (e.g. Dune's Chakobsa blocks)
+_TRANSLATION_COL_RE = re.compile(r"\s{4,}\((?:CHAKOBSA|PHONETIC|[A-Z]+ TRANSLATION)[^)]*\).*$", re.IGNORECASE)
+_DUAL_COL_SPLIT_RE = re.compile(r"\s{8,}")  # 8+ spaces mid-line = two columns merged
+
+
+def _strip_dual_column(text: str) -> str:
+    """
+    Remove right-column translation content injected by PDF-to-text conversion.
+    Only activates when a translation annotation is present on the line — safe
+    for screenplays that use split-screen / simultaneous-dialogue formatting.
+    """
+    if not _TRANSLATION_COL_RE.search(text):
+        return text  # fast path: no translation annotation → leave untouched
+    # Remove the annotation (and anything after it on that line)
+    result = _TRANSLATION_COL_RE.sub("", text)
+    # Strip at the large gap — right-column character name may precede the annotation
+    parts = _DUAL_COL_SPLIT_RE.split(result, maxsplit=1)
+    result = parts[0].strip()
+    # If what remains is a bare character name it was a right-column artifact → discard
+    if _is_character_name(result):
+        return ""
+    return result
+
 _CENTER_INDENT = 20
 _DIALOGUE_INDENT = 10
 
@@ -193,28 +216,30 @@ def _parse_scene_content(lines: list, char_indent: int = _CENTER_INDENT) -> tupl
             if _is_character_name(stripped):
                 flush_action()
                 flush_dialogue()
-                char_name = _CHAR_SUFFIX_RE.sub("", stripped).strip() or None
+                clean = _strip_dual_column(stripped)
+                char_name = _CHAR_SUFFIX_RE.sub("", clean).strip() or None
                 state = "dialogue"
             else:
                 flush_dialogue()
                 char_name = None
                 state = "action"
-                action_buf.append(stripped)
+                action_buf.append(_strip_dual_column(stripped))
 
         elif non_standard and indent >= char_indent and _is_character_name(stripped):
             flush_action()
             flush_dialogue()
-            char_name = _CHAR_SUFFIX_RE.sub("", stripped).strip() or None
+            clean = _strip_dual_column(stripped)
+            char_name = _CHAR_SUFFIX_RE.sub("", clean).strip() or None
             state = "dialogue"
 
         elif _PAREN_RE.match(line) and state == "dialogue":
             paren = stripped.strip("()")
 
         elif indent >= _DIALOGUE_INDENT and state == "dialogue" and not non_standard:
-            dlg_buf.append(stripped)
+            dlg_buf.append(_strip_dual_column(stripped))
 
         elif state == "dialogue" and non_standard:
-            dlg_buf.append(stripped)
+            dlg_buf.append(_strip_dual_column(stripped))
 
         else:
             if state == "dialogue":
