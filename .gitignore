@@ -42,3 +42,6 @@ hf_cache/
 chroma_db/
 frontend/
 video_chroma_db/
+backend/indices/
+backend/output/
+backend/screenplays/
