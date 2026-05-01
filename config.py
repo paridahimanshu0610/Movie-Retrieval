@@ -8,8 +8,8 @@ from pathlib import Path
 # ── Paths ──────────────────────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).parent
 DATA_PATH = BASE_DIR / "outputs" / "final_clip_data.json"
-CHROMA_PERSIST_DIR = BASE_DIR / "chroma_db"
-BM25_INDEX_PATH = BASE_DIR / "bm25_index.pkl"
+CHROMA_PERSIST_DIR = BASE_DIR / "video_chroma_db"
+BM25_INDEX_PATH = BASE_DIR / "video_bm25_index.pkl"
 
 # ── Embedding model (sentence-transformers) ────────────────────────────────────
 # bge-small-en-v1.5 is fast and high quality; swap for a larger model if needed.
@@ -53,3 +53,9 @@ ALL_FIELD_TYPES: list[str] = list(CLIP_FIELDS.keys()) + list(MOVIE_FIELDS.keys()
 # ── Retrieval hyperparameters ──────────────────────────────────────────────────
 TOP_K = 3        # Number of results returned per retriever call.
 RRF_K = 60       # Reciprocal Rank Fusion constant (higher = gentler rank penalty).
+
+# ── Evaluation settings ───────────────────────────────────────────────────────
+EVAL_QUERIES_PATH = BASE_DIR / "eval_queries.json"   # Path to ground-truth queries.
+RESULTS_DIR = Path(__file__).parent / "results"
+RESULTS_DIR.mkdir(exist_ok=True)
+EVAL_RESULTS_PATH = RESULTS_DIR / "evaluation_results.json"   # Where to save evaluation results.

@@ -1,0 +1,273 @@
+[
+  {
+    "id": "q01",
+    "query": "astronauts in white spacesuits running from a massive tidal wave",
+    "relevant_clips": [
+      {"movie": "Interstellar", "clip_id": "gigantic_wave"}
+    ],
+    "expected_intent": "action",
+    "notes": "multi-field: subjects + action"
+  },
+  {
+    "id": "q02",
+    "query": "astronaut sacrifices himself and falls into the black hole",
+    "relevant_clips": [
+      {"movie": "Interstellar", "clip_id": "into_the_black_hole"}
+    ],
+    "expected_intent": "action",
+    "notes": "plot-action"
+  },
+  {
+    "id": "q03",
+    "query": "scene with a sense of awe and wonder inside a tesseract or higher dimension",
+    "relevant_clips": [
+      {"movie": "Interstellar", "clip_id": "into_the_black_hole"}
+    ],
+    "expected_intent": "emotional",
+    "notes": "emotional + thematic"
+  },
+  {
+    "id": "q04",
+    "query": "a drone being chased through a cornfield",
+    "relevant_clips": [
+      {"movie": "Interstellar", "clip_id": "cornfield_drone_chase"}
+    ],
+    "expected_intent": "action",
+    "notes": "action"
+  },
+  {
+    "id": "q05",
+    "query": "buildings collapsing and everything falling apart during a massive earthquake",
+    "relevant_clips": [
+      {"movie": "2012", "clip_id": "massive_earthquake"}
+    ],
+    "expected_intent": "action",
+    "notes": "action + visual"
+  },
+  {
+    "id": "q06",
+    "query": "supervolcano erupting with a large explosion and ash cloud",
+    "relevant_clips": [
+      {"movie": "2012", "clip_id": "supervolcano_eruption"}
+    ],
+    "expected_intent": "action",
+    "notes": "action"
+  },
+  {
+    "id": "q07",
+    "query": "a giant tsunami wave approaching the Himalayas",
+    "relevant_clips": [
+      {"movie": "2012", "clip_id": "himalayan_tsunami"}
+    ],
+    "expected_intent": "action",
+    "notes": "action + visual"
+  },
+  {
+    "id": "q08",
+    "query": "control room with staff trying to manage a catastrophic event while chaos unfolds outside",
+    "relevant_clips": [
+      {"movie": "2012", "clip_id": "escaping_los_vegas_apocalypse"}
+    ],
+    "expected_intent": "action",
+    "notes": "action + subjects"
+  },
+  {
+    "id": "q09",
+    "query": "Harry Potter's name is unexpectedly called out from a fire goblet",
+    "relevant_clips": [
+      {"movie": "Harry Potter and the Goblet of Fire", "clip_id": "harry_picked_from_the_goblet"}
+    ],
+    "expected_intent": "action",
+    "notes": "action + plot"
+  },
+  {
+    "id": "q10",
+    "query": "Voldemort rises and returns in a dark graveyard ritual",
+    "relevant_clips": [
+      {"movie": "Harry Potter and the Goblet of Fire", "clip_id": "voldemort_returns"}
+    ],
+    "expected_intent": "action",
+    "notes": "action + emotional"
+  },
+  {
+    "id": "q11",
+    "query": "a ghost girl singing in a bathroom bathtub",
+    "relevant_clips": [
+      {"movie": "Harry Potter and the Goblet of Fire", "clip_id": "singing_myrtle"}
+    ],
+    "expected_intent": "action",
+    "notes": "subjects + emotional"
+  },
+  {
+    "id": "q12",
+    "query": "Harry grabs a golden egg while dodging a dragon",
+    "relevant_clips": [
+      {"movie": "Harry Potter and the Goblet of Fire", "clip_id": "the_golden_egg"}
+    ],
+    "expected_intent": "action",
+    "notes": "action"
+  },
+  {
+    "id": "q13",
+    "query": "Spider-Man uses his webs to stop a speeding subway train from crashing",
+    "relevant_clips": [
+      {"movie": "Spider-Man", "clip_id": "spiderman_train_stopping"}
+    ],
+    "expected_intent": "action",
+    "notes": "action"
+  },
+  {
+    "id": "q14",
+    "query": "scene where a villain in a glider meets a tragic end in a dark warehouse",
+    "relevant_clips": [
+      {"movie": "Spider-Man", "clip_id": "green_goblin_demise"}
+    ],
+    "expected_intent": "action",
+    "notes": "action + emotional"
+  },
+  {
+    "id": "q15",
+    "query": "Buzz Lightyear hiding behind a flower pot spying on Bo Peep",
+    "relevant_clips": [
+      {"movie": "Toy Story 4", "clip_id": "buzz_reunites_with_bo_peep"}
+    ],
+    "expected_intent": "action",
+    "notes": "subjects + action"
+  },
+  {
+    "id": "q16",
+    "query": "animated characters jumping a bike over a gap to rescue a spork toy",
+    "relevant_clips": [
+      {"movie": "Toy Story 4", "clip_id": "bike_jump_to_forky"}
+    ],
+    "expected_intent": "action",
+    "notes": "action"
+  },
+  {
+    "id": "q17",
+    "query": "emotional farewell between toy characters as one decides to stay behind",
+    "relevant_clips": [
+      {"movie": "Toy Story 4", "clip_id": "gabby_finds_a_new_friend"}
+    ],
+    "expected_intent": "emotional",
+    "notes": "emotional + thematic"
+  },
+  {
+    "id": "q18",
+    "query": "Deadpool and Wolverine face off in red and yellow suits in a desolate field",
+    "relevant_clips": [
+      {"movie": "Deadpool & Wolverine", "clip_id": "wolverine_and_deadpool_fight_deadpool_corps"}
+    ],
+    "expected_intent": "action",
+    "notes": "subjects + action"
+  },
+  {
+    "id": "q19",
+    "query": "chaotic brawl with multiple costumed superheroes fighting a horde of villains",
+    "relevant_clips": [
+      {"movie": "Deadpool & Wolverine", "clip_id": "blood_soaked_battle"}
+    ],
+    "expected_intent": "action",
+    "notes": "action"
+  },
+  {
+    "id": "q20",
+    "query": "tense confrontation between two strong female Wakandan warriors indoors",
+    "relevant_clips": [
+      {"movie": "Black Panther: Wakanda Forever", "clip_id": "okoye_and_shuri_tense_confrontation"}
+    ],
+    "expected_intent": "action",
+    "notes": "subjects + emotional"
+  },
+  {
+    "id": "q21",
+    "query": "underwater warriors with spears fighting on the ocean surface",
+    "relevant_clips": [
+      {"movie": "Black Panther: Wakanda Forever", "clip_id": "wakandans_vs_talokanil_final_battle"}
+    ],
+    "expected_intent": "action",
+    "notes": "action + visual"
+  },
+  {
+    "id": "q22",
+    "query": "scene on a tranquil beach at dusk that suddenly turns dangerous and tense",
+    "relevant_clips": [
+      {"movie": "Black Panther: Wakanda Forever", "clip_id": "nakia_locates_shuri"}
+    ],
+    "expected_intent": "emotional",
+    "notes": "emotional + visual"
+  },
+  {
+    "id": "q23",
+    "query": "Thor and the Hulk fight in a gladiatorial arena",
+    "relevant_clips": [
+      {"movie": "Thor Ragnarok", "clip_id": "thor_vs_hulk_fight"}
+    ],
+    "expected_intent": "action",
+    "notes": "action + subjects"
+  },
+  {
+    "id": "q24",
+    "query": "man in dark armor with a red cape battles a powerful goddess on a grassy cliff",
+    "relevant_clips": [
+      {"movie": "Thor Ragnarok", "clip_id": "thor_vs_hela"}
+    ],
+    "expected_intent": "action",
+    "notes": "subjects + action"
+  },
+  {
+    "id": "q25",
+    "query": "a magical dark fire ritual in a forest with figures in dark coats",
+    "relevant_clips": [
+      {"movie": "Fantastic Beasts: The Crimes of Grindelwald", "clip_id": "protego_diabolica"}
+    ],
+    "expected_intent": "visual",
+    "notes": "visual + thematic"
+  },
+  {
+    "id": "q26",
+    "query": "wizard chasing escaped magical creatures through city streets at night",
+    "relevant_clips": [
+      {"movie": "Fantastic Beasts: The Crimes of Grindelwald", "clip_id": "catching_wild_beasts"}
+    ],
+    "expected_intent": "action",
+    "notes": "action"
+  },
+  {
+    "id": "q27",
+    "query": "Harry and Ron chase the Hogwarts Express in a flying car over a green valley",
+    "relevant_clips": [
+      {"movie": "Harry Potter and the Chamber of Secrets", "clip_id": "flying_car_chase"}
+    ],
+    "expected_intent": "action",
+    "notes": "action + visual"
+  },
+  {
+    "id": "q28",
+    "query": "tiny mischievous blue pixies cause havoc in a classroom",
+    "relevant_clips": [
+      {"movie": "Harry Potter and the Chamber of Secrets", "clip_id": "pesky_pixies"}
+    ],
+    "expected_intent": "action",
+    "notes": "action + subjects"
+  },
+  {
+    "id": "q29",
+    "query": "Harry Potter kills a giant serpent with a sword in dark underground chamber",
+    "relevant_clips": [
+      {"movie": "Harry Potter and the Chamber of Secrets", "clip_id": "basilisk_slayer"}
+    ],
+    "expected_intent": "action",
+    "notes": "action"
+  },
+  {
+    "id": "q30",
+    "query": "dimly lit scene with an overwhelming sense of doom and apocalyptic dread",
+    "relevant_clips": [
+      {"movie": "2012", "clip_id": "himalayan_tsunami"},
+      {"movie": "2012", "clip_id": "escaping_los_vegas_apocalypse"}
+    ],
+    "expected_intent": "emotional",
+    "notes": "emotional — multiple valid answers"
+  }
+]

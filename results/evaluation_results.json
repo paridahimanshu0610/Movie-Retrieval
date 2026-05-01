@@ -1,0 +1,1188 @@
+{
+  "k": 3,
+  "aggregate": {
+    "mrr": 0.8111111111111111,
+    "hit@3": 0.8333333333333334,
+    "p@3": 0.27777777777777773,
+    "r@3": 0.8333333333333334,
+    "ndcg@3": 0.8166666666666667,
+    "intent_accuracy": 0.8,
+    "avg_latency_s": 22.744766666666667
+  },
+  "per_query": [
+    {
+      "id": "q01",
+      "query": "astronauts in white spacesuits running from a massive tidal wave",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 25.958,
+      "expected_clips": [
+        {
+          "movie": "Interstellar",
+          "clip_id": "gigantic_wave"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Interstellar",
+          "clip_id": "gigantic_wave",
+          "rank": 1
+        },
+        {
+          "movie": "Black Panther: Wakanda Forever",
+          "clip_id": "wakandans_vs_talokanil_final_battle",
+          "rank": 2
+        },
+        {
+          "movie": "Interstellar",
+          "clip_id": "into_the_black_hole",
+          "rank": 3
+        }
+      ],
+      "notes": "multi-field: subjects + action"
+    },
+    {
+      "id": "q02",
+      "query": "astronaut sacrifices himself and falls into the black hole",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 21.405,
+      "expected_clips": [
+        {
+          "movie": "Interstellar",
+          "clip_id": "into_the_black_hole"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Interstellar",
+          "clip_id": "into_the_black_hole",
+          "rank": 1
+        },
+        {
+          "movie": "Interstellar",
+          "clip_id": "gigantic_wave",
+          "rank": 2
+        },
+        {
+          "movie": "2012",
+          "clip_id": "escaping_los_vegas_apocalypse",
+          "rank": 3
+        }
+      ],
+      "notes": "plot-action"
+    },
+    {
+      "id": "q03",
+      "query": "scene with a sense of awe and wonder inside a tesseract or higher dimension",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "emotional",
+      "expected_intent": "emotional",
+      "latency_s": 21.422,
+      "expected_clips": [
+        {
+          "movie": "Interstellar",
+          "clip_id": "into_the_black_hole"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Interstellar",
+          "clip_id": "into_the_black_hole",
+          "rank": 1
+        },
+        {
+          "movie": "2012",
+          "clip_id": "himalayan_tsunami",
+          "rank": 2
+        },
+        {
+          "movie": "Fantastic Beasts: The Crimes of Grindelwald",
+          "clip_id": "niffler_investigation",
+          "rank": 3
+        }
+      ],
+      "notes": "emotional + thematic"
+    },
+    {
+      "id": "q04",
+      "query": "a drone being chased through a cornfield",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 20.272,
+      "expected_clips": [
+        {
+          "movie": "Interstellar",
+          "clip_id": "cornfield_drone_chase"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Interstellar",
+          "clip_id": "cornfield_drone_chase",
+          "rank": 1
+        },
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "deadpool_and_wolverine_meets_nicepool",
+          "rank": 2
+        },
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "post_credit_scene",
+          "rank": 3
+        }
+      ],
+      "notes": "action"
+    },
+    {
+      "id": "q05",
+      "query": "buildings collapsing and everything falling apart during a massive earthquake",
+      "metrics": {
+        "mrr": 0.0,
+        "hit@3": 0.0,
+        "p@3": 0.0,
+        "r@3": 0.0,
+        "ndcg@3": 0.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 21.928,
+      "expected_clips": [
+        {
+          "movie": "2012",
+          "clip_id": "massive_earthquake"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "2012",
+          "clip_id": "supervolcano_eruption",
+          "rank": 1
+        },
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "blood_soaked_battle",
+          "rank": 2
+        },
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "post_credit_scene",
+          "rank": 3
+        }
+      ],
+      "notes": "action + visual"
+    },
+    {
+      "id": "q06",
+      "query": "supervolcano erupting with a large explosion and ash cloud",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 21.455,
+      "expected_clips": [
+        {
+          "movie": "2012",
+          "clip_id": "supervolcano_eruption"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "2012",
+          "clip_id": "supervolcano_eruption",
+          "rank": 1
+        },
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "blood_soaked_battle",
+          "rank": 2
+        },
+        {
+          "movie": "Thor Ragnarok",
+          "clip_id": "thor_vs_hela",
+          "rank": 3
+        }
+      ],
+      "notes": "action"
+    },
+    {
+      "id": "q07",
+      "query": "a giant tsunami wave approaching the Himalayas",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": false,
+      "routed_intent": "visual",
+      "expected_intent": "action",
+      "latency_s": 25.332,
+      "expected_clips": [
+        {
+          "movie": "2012",
+          "clip_id": "himalayan_tsunami"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "2012",
+          "clip_id": "himalayan_tsunami",
+          "rank": 1
+        },
+        {
+          "movie": "Black Panther: Wakanda Forever",
+          "clip_id": "wakandans_vs_talokanil_final_battle",
+          "rank": 2
+        },
+        {
+          "movie": "Harry Potter and the Chamber of Secrets",
+          "clip_id": "flying_car_chase",
+          "rank": 3
+        }
+      ],
+      "notes": "action + visual"
+    },
+    {
+      "id": "q08",
+      "query": "control room with staff trying to manage a catastrophic event while chaos unfolds outside",
+      "metrics": {
+        "mrr": 0.0,
+        "hit@3": 0.0,
+        "p@3": 0.0,
+        "r@3": 0.0,
+        "ndcg@3": 0.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 23.357,
+      "expected_clips": [
+        {
+          "movie": "2012",
+          "clip_id": "escaping_los_vegas_apocalypse"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "blood_soaked_battle",
+          "rank": 1
+        },
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "post_credit_scene",
+          "rank": 2
+        },
+        {
+          "movie": "Thor Ragnarok",
+          "clip_id": "thor_vs_hulk_fight",
+          "rank": 3
+        }
+      ],
+      "notes": "action + subjects"
+    },
+    {
+      "id": "q09",
+      "query": "Harry Potter's name is unexpectedly called out from a fire goblet",
+      "metrics": {
+        "mrr": 0.0,
+        "hit@3": 0.0,
+        "p@3": 0.0,
+        "r@3": 0.0,
+        "ndcg@3": 0.0
+      },
+      "intent_correct": false,
+      "routed_intent": "plot",
+      "expected_intent": "action",
+      "latency_s": 18.451,
+      "expected_clips": [
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "harry_picked_from_the_goblet"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "",
+          "rank": 1
+        },
+        {
+          "movie": "Harry Potter and the Chamber of Secrets",
+          "clip_id": "",
+          "rank": 2
+        },
+        {
+          "movie": "Fantastic Beasts: The Crimes of Grindelwald",
+          "clip_id": "",
+          "rank": 3
+        }
+      ],
+      "notes": "action + plot"
+    },
+    {
+      "id": "q10",
+      "query": "Voldemort rises and returns in a dark graveyard ritual",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 21.366,
+      "expected_clips": [
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "voldemort_returns"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "voldemort_returns",
+          "rank": 1
+        },
+        {
+          "movie": "Fantastic Beasts: The Crimes of Grindelwald",
+          "clip_id": "protego_diabolica",
+          "rank": 2
+        },
+        {
+          "movie": "Fantastic Beasts: The Crimes of Grindelwald",
+          "clip_id": "niffler_investigation",
+          "rank": 3
+        }
+      ],
+      "notes": "action + emotional"
+    },
+    {
+      "id": "q11",
+      "query": "a ghost girl singing in a bathroom bathtub",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": false,
+      "routed_intent": "subjects",
+      "expected_intent": "action",
+      "latency_s": 29.032,
+      "expected_clips": [
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "singing_myrtle"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "singing_myrtle",
+          "rank": 1
+        },
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "voldemort_returns",
+          "rank": 2
+        },
+        {
+          "movie": "2012",
+          "clip_id": "himalayan_tsunami",
+          "rank": 3
+        }
+      ],
+      "notes": "subjects + emotional"
+    },
+    {
+      "id": "q12",
+      "query": "Harry grabs a golden egg while dodging a dragon",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 24.989,
+      "expected_clips": [
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "the_golden_egg"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "the_golden_egg",
+          "rank": 1
+        },
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "voldemort_returns",
+          "rank": 2
+        },
+        {
+          "movie": "Harry Potter and the Chamber of Secrets",
+          "clip_id": "basilisk_slayer",
+          "rank": 3
+        }
+      ],
+      "notes": "action"
+    },
+    {
+      "id": "q13",
+      "query": "Spider-Man uses his webs to stop a speeding subway train from crashing",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 20.769,
+      "expected_clips": [
+        {
+          "movie": "Spider-Man",
+          "clip_id": "spiderman_train_stopping"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Spider-Man",
+          "clip_id": "spiderman_train_stopping",
+          "rank": 1
+        },
+        {
+          "movie": "Spider-Man",
+          "clip_id": "bridge_rescue",
+          "rank": 2
+        },
+        {
+          "movie": "Spider-Man",
+          "clip_id": "green_goblin_demise",
+          "rank": 3
+        }
+      ],
+      "notes": "action"
+    },
+    {
+      "id": "q14",
+      "query": "scene where a villain in a glider meets a tragic end in a dark warehouse",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 22.112,
+      "expected_clips": [
+        {
+          "movie": "Spider-Man",
+          "clip_id": "green_goblin_demise"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Spider-Man",
+          "clip_id": "green_goblin_demise",
+          "rank": 1
+        },
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "voldemort_returns",
+          "rank": 2
+        },
+        {
+          "movie": "Thor Ragnarok",
+          "clip_id": "thor_vs_hulk_fight",
+          "rank": 3
+        }
+      ],
+      "notes": "action + emotional"
+    },
+    {
+      "id": "q15",
+      "query": "Buzz Lightyear hiding behind a flower pot spying on Bo Peep",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 21.329,
+      "expected_clips": [
+        {
+          "movie": "Toy Story 4",
+          "clip_id": "buzz_reunites_with_bo_peep"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Toy Story 4",
+          "clip_id": "buzz_reunites_with_bo_peep",
+          "rank": 1
+        },
+        {
+          "movie": "Toy Story 4",
+          "clip_id": "buzz_returns_to_the_rv",
+          "rank": 2
+        },
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "singing_myrtle",
+          "rank": 3
+        }
+      ],
+      "notes": "subjects + action"
+    },
+    {
+      "id": "q16",
+      "query": "animated characters jumping a bike over a gap to rescue a spork toy",
+      "metrics": {
+        "mrr": 0.0,
+        "hit@3": 0.0,
+        "p@3": 0.0,
+        "r@3": 0.0,
+        "ndcg@3": 0.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 22.824,
+      "expected_clips": [
+        {
+          "movie": "Toy Story 4",
+          "clip_id": "bike_jump_to_forky"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Toy Story 4",
+          "clip_id": "buzz_reunites_with_bo_peep",
+          "rank": 1
+        },
+        {
+          "movie": "Thor Ragnarok",
+          "clip_id": "thor_vs_hulk_fight",
+          "rank": 2
+        },
+        {
+          "movie": "Toy Story 4",
+          "clip_id": "buzz_returns_to_the_rv",
+          "rank": 3
+        }
+      ],
+      "notes": "action"
+    },
+    {
+      "id": "q17",
+      "query": "emotional farewell between toy characters as one decides to stay behind",
+      "metrics": {
+        "mrr": 0.3333333333333333,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 0.5
+      },
+      "intent_correct": true,
+      "routed_intent": "emotional",
+      "expected_intent": "emotional",
+      "latency_s": 23.55,
+      "expected_clips": [
+        {
+          "movie": "Toy Story 4",
+          "clip_id": "gabby_finds_a_new_friend"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Toy Story 4",
+          "clip_id": "buzz_reunites_with_bo_peep",
+          "rank": 1
+        },
+        {
+          "movie": "Toy Story 4",
+          "clip_id": "bike_jump_to_forky",
+          "rank": 2
+        },
+        {
+          "movie": "Toy Story 4",
+          "clip_id": "gabby_finds_a_new_friend",
+          "rank": 3
+        }
+      ],
+      "notes": "emotional + thematic"
+    },
+    {
+      "id": "q18",
+      "query": "Deadpool and Wolverine face off in red and yellow suits in a desolate field",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 20.701,
+      "expected_clips": [
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "wolverine_and_deadpool_fight_deadpool_corps"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "wolverine_and_deadpool_fight_deadpool_corps",
+          "rank": 1
+        },
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "post_credit_scene",
+          "rank": 2
+        },
+        {
+          "movie": "Spider-Man",
+          "clip_id": "bridge_rescue",
+          "rank": 3
+        }
+      ],
+      "notes": "subjects + action"
+    },
+    {
+      "id": "q19",
+      "query": "chaotic brawl with multiple costumed superheroes fighting a horde of villains",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 22.513,
+      "expected_clips": [
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "blood_soaked_battle"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "blood_soaked_battle",
+          "rank": 1
+        },
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "wolverine_and_deadpool_fight_deadpool_corps",
+          "rank": 2
+        },
+        {
+          "movie": "Thor Ragnarok",
+          "clip_id": "thor_vs_hulk_fight",
+          "rank": 3
+        }
+      ],
+      "notes": "action"
+    },
+    {
+      "id": "q20",
+      "query": "tense confrontation between two strong female Wakandan warriors indoors",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 28.469,
+      "expected_clips": [
+        {
+          "movie": "Black Panther: Wakanda Forever",
+          "clip_id": "okoye_and_shuri_tense_confrontation"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Black Panther: Wakanda Forever",
+          "clip_id": "okoye_and_shuri_tense_confrontation",
+          "rank": 1
+        },
+        {
+          "movie": "Thor Ragnarok",
+          "clip_id": "thor_vs_hulk_fight",
+          "rank": 2
+        },
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "blood_soaked_battle",
+          "rank": 3
+        }
+      ],
+      "notes": "subjects + emotional"
+    },
+    {
+      "id": "q21",
+      "query": "underwater warriors with spears fighting on the ocean surface",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 21.162,
+      "expected_clips": [
+        {
+          "movie": "Black Panther: Wakanda Forever",
+          "clip_id": "wakandans_vs_talokanil_final_battle"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Black Panther: Wakanda Forever",
+          "clip_id": "wakandans_vs_talokanil_final_battle",
+          "rank": 1
+        },
+        {
+          "movie": "Black Panther: Wakanda Forever",
+          "clip_id": "nakia_locates_shuri",
+          "rank": 2
+        },
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "wolverine_and_deadpool_fight_deadpool_corps",
+          "rank": 3
+        }
+      ],
+      "notes": "action + visual"
+    },
+    {
+      "id": "q22",
+      "query": "scene on a tranquil beach at dusk that suddenly turns dangerous and tense",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": false,
+      "routed_intent": "visual",
+      "expected_intent": "emotional",
+      "latency_s": 21.342,
+      "expected_clips": [
+        {
+          "movie": "Black Panther: Wakanda Forever",
+          "clip_id": "nakia_locates_shuri"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Black Panther: Wakanda Forever",
+          "clip_id": "nakia_locates_shuri",
+          "rank": 1
+        },
+        {
+          "movie": "Black Panther: Wakanda Forever",
+          "clip_id": "tchalla_son_toussaint",
+          "rank": 2
+        },
+        {
+          "movie": "Spider-Man",
+          "clip_id": "green_goblin_demise",
+          "rank": 3
+        }
+      ],
+      "notes": "emotional + visual"
+    },
+    {
+      "id": "q23",
+      "query": "Thor and the Hulk fight in a gladiatorial arena",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 26.813,
+      "expected_clips": [
+        {
+          "movie": "Thor Ragnarok",
+          "clip_id": "thor_vs_hulk_fight"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Thor Ragnarok",
+          "clip_id": "thor_vs_hulk_fight",
+          "rank": 1
+        },
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "post_credit_scene",
+          "rank": 2
+        },
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "blood_soaked_battle",
+          "rank": 3
+        }
+      ],
+      "notes": "action + subjects"
+    },
+    {
+      "id": "q24",
+      "query": "man in dark armor with a red cape battles a powerful goddess on a grassy cliff",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 21.727,
+      "expected_clips": [
+        {
+          "movie": "Thor Ragnarok",
+          "clip_id": "thor_vs_hela"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Thor Ragnarok",
+          "clip_id": "thor_vs_hela",
+          "rank": 1
+        },
+        {
+          "movie": "Harry Potter and the Chamber of Secrets",
+          "clip_id": "basilisk_slayer",
+          "rank": 2
+        },
+        {
+          "movie": "Spider-Man",
+          "clip_id": "bridge_rescue",
+          "rank": 3
+        }
+      ],
+      "notes": "subjects + action"
+    },
+    {
+      "id": "q25",
+      "query": "a magical dark fire ritual in a forest with figures in dark coats",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": false,
+      "routed_intent": "action",
+      "expected_intent": "visual",
+      "latency_s": 24.664,
+      "expected_clips": [
+        {
+          "movie": "Fantastic Beasts: The Crimes of Grindelwald",
+          "clip_id": "protego_diabolica"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Fantastic Beasts: The Crimes of Grindelwald",
+          "clip_id": "protego_diabolica",
+          "rank": 1
+        },
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "harry_picked_from_the_goblet",
+          "rank": 2
+        },
+        {
+          "movie": "Harry Potter and the Chamber of Secrets",
+          "clip_id": "basilisk_slayer",
+          "rank": 3
+        }
+      ],
+      "notes": "visual + thematic"
+    },
+    {
+      "id": "q26",
+      "query": "wizard chasing escaped magical creatures through city streets at night",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 22.648,
+      "expected_clips": [
+        {
+          "movie": "Fantastic Beasts: The Crimes of Grindelwald",
+          "clip_id": "catching_wild_beasts"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Fantastic Beasts: The Crimes of Grindelwald",
+          "clip_id": "catching_wild_beasts",
+          "rank": 1
+        },
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "voldemort_returns",
+          "rank": 2
+        },
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "wolverine_and_deadpool_fight_deadpool_corps",
+          "rank": 3
+        }
+      ],
+      "notes": "action"
+    },
+    {
+      "id": "q27",
+      "query": "Harry and Ron chase the Hogwarts Express in a flying car over a green valley",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 22.105,
+      "expected_clips": [
+        {
+          "movie": "Harry Potter and the Chamber of Secrets",
+          "clip_id": "flying_car_chase"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Harry Potter and the Chamber of Secrets",
+          "clip_id": "flying_car_chase",
+          "rank": 1
+        },
+        {
+          "movie": "Toy Story 4",
+          "clip_id": "buzz_reunites_with_bo_peep",
+          "rank": 2
+        },
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "the_golden_egg",
+          "rank": 3
+        }
+      ],
+      "notes": "action + visual"
+    },
+    {
+      "id": "q28",
+      "query": "tiny mischievous blue pixies cause havoc in a classroom",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 21.819,
+      "expected_clips": [
+        {
+          "movie": "Harry Potter and the Chamber of Secrets",
+          "clip_id": "pesky_pixies"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Harry Potter and the Chamber of Secrets",
+          "clip_id": "pesky_pixies",
+          "rank": 1
+        },
+        {
+          "movie": "Fantastic Beasts: The Crimes of Grindelwald",
+          "clip_id": "protego_diabolica",
+          "rank": 2
+        },
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "harry_picked_from_the_goblet",
+          "rank": 3
+        }
+      ],
+      "notes": "action + subjects"
+    },
+    {
+      "id": "q29",
+      "query": "Harry Potter kills a giant serpent with a sword in dark underground chamber",
+      "metrics": {
+        "mrr": 1.0,
+        "hit@3": 1.0,
+        "p@3": 0.3333333333333333,
+        "r@3": 1.0,
+        "ndcg@3": 1.0
+      },
+      "intent_correct": true,
+      "routed_intent": "action",
+      "expected_intent": "action",
+      "latency_s": 21.667,
+      "expected_clips": [
+        {
+          "movie": "Harry Potter and the Chamber of Secrets",
+          "clip_id": "basilisk_slayer"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Harry Potter and the Chamber of Secrets",
+          "clip_id": "basilisk_slayer",
+          "rank": 1
+        },
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "voldemort_returns",
+          "rank": 2
+        },
+        {
+          "movie": "Fantastic Beasts: The Crimes of Grindelwald",
+          "clip_id": "protego_diabolica",
+          "rank": 3
+        }
+      ],
+      "notes": "action"
+    },
+    {
+      "id": "q30",
+      "query": "dimly lit scene with an overwhelming sense of doom and apocalyptic dread",
+      "metrics": {
+        "mrr": 0.0,
+        "hit@3": 0.0,
+        "p@3": 0.0,
+        "r@3": 0.0,
+        "ndcg@3": 0.0
+      },
+      "intent_correct": false,
+      "routed_intent": "visual",
+      "expected_intent": "emotional",
+      "latency_s": 21.162,
+      "expected_clips": [
+        {
+          "movie": "2012",
+          "clip_id": "himalayan_tsunami"
+        },
+        {
+          "movie": "2012",
+          "clip_id": "escaping_los_vegas_apocalypse"
+        }
+      ],
+      "retrieved_clips": [
+        {
+          "movie": "Deadpool & Wolverine",
+          "clip_id": "blood_soaked_battle",
+          "rank": 1
+        },
+        {
+          "movie": "Thor Ragnarok",
+          "clip_id": "thor_vs_hulk_fight",
+          "rank": 2
+        },
+        {
+          "movie": "Harry Potter and the Goblet of Fire",
+          "clip_id": "voldemort_returns",
+          "rank": 3
+        }
+      ],
+      "notes": "emotional — multiple valid answers"
+    }
+  ]
+}
