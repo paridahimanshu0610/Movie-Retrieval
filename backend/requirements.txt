@@ -13,6 +13,14 @@ sentence-transformers
 faiss-cpu
 rank-bm25
 
+# Video retrieval
+chromadb
+
+# Local LLM (video pipeline reranker/router)
+# Install with CUDA support instead:
+#   pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu128
+llama-cpp-python
+
 # API
 fastapi
 uvicorn[standard]
