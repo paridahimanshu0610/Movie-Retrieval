@@ -44,6 +44,7 @@ from intent_classifier import classify_query
 
 ret.INDEX_DIR = INDEX_DIR
 
+from reranker import ScreenplayReranker
 from video_config import LLM_MODEL_PATH, LLM_N_GPU_LAYERS, TOP_K
 from video_retriever.video_retrieval_pipeline import RetrievalPipeline
 
@@ -156,6 +157,7 @@ def startup():
         n_gpu_layers=n_gpu_layers,
         use_llm=use_llm,
     )
+    app.state.reranker = ScreenplayReranker(registry=app.state.registry)
 
 
 # Models
@@ -438,6 +440,7 @@ def search(req: SearchRequest):
     kwargs["top_k"]= req.top_k
 
     raw_results, entity_names = ret.retrieve(**kwargs)
+    raw_results = app.state.reranker.rerank(req.query, raw_results, req.top_k)
     results = _format_results(raw_results, req.top_k, app.state.registry)
 
     return SearchResponse(
@@ -472,6 +475,7 @@ def query(req: QueryRequest):
     kwargs["top_k"] = req.top_k
 
     raw_results, entity_names = ret.retrieve(**kwargs)
+    raw_results = app.state.reranker.rerank(req.query, raw_results, req.top_k)
     results = _format_results(raw_results, req.top_k, app.state.registry)
 
     return SearchResponse(
