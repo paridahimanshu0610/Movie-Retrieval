@@ -165,7 +165,7 @@ function SearchPage() {
         setStatus(
           nextVideoResults.length === 0
             ? 'No video matches found.'
-            : `Showing ${nextVideoResults.length} ranked video match${nextVideoResults.length === 1 ? '' : 'es'}.`,
+            : `Showing ${nextVideoResults.length} video match${nextVideoResults.length === 1 ? '' : 'es'}.`,
         )
         return
       }
@@ -299,8 +299,8 @@ function SearchPage() {
               </div>
               <span className="mode-copy">
                 {selectedMode === 'video'
-                  ? 'Queries the video retrieval backend and returns ranked YouTube clips with timestamps and matched fields.'
-                  : 'Uses the screenplay backend and returns the best matching scenes.'}
+                  ? 'Returns YouTube clips with timestamps.'
+                  : 'Returns the best matching movies.'}
               </span>
             </div>
           </form>
@@ -322,8 +322,8 @@ function SearchPage() {
               <span className="result-count">{videoResults.length} video results returned</span>
             </div>
 
-            <article className="featured-card video-card">
-              <VideoPreview result={primaryVideoResult} />
+            <article className="result-card video-result-card">
+              <VideoPreview result={primaryVideoResult} compact />
               <div className="result-body">
                 <div className="result-header">
                   <div>
@@ -335,16 +335,6 @@ function SearchPage() {
                   </div>
                 </div>
 
-                <div className="result-meta">
-                  <span className="pill">
-                    Rank #{primaryVideoResult.retrieval_rank ?? 1}
-                  </span>
-                </div>
-
-                <div className="detail-block">
-                  <span className="detail-label">Matched clip description</span>
-                  <p>{primaryVideoResult.content}</p>
-                </div>
                 <div className="feedback-bar">
                   <span className="feedback-copy">
                     {acceptedFirstResult ? 'Keeping this result selected.' : 'Is this the right result?'}
@@ -384,8 +374,8 @@ function SearchPage() {
             </article>
 
             {showAlternatives && alternativeVideoResults.length > 0 && (
-              <div className="thumbnail-grid">
-                {alternativeVideoResults.map((result, index) => (
+              <div className="thumbnail-grid video-thumbnail-grid">
+                {alternativeVideoResults.map((result) => (
                   <article key={result.doc_id} className="result-card">
                     <VideoPreview result={result} compact />
                     <div className="result-body">
@@ -396,7 +386,6 @@ function SearchPage() {
                         </div>
                       </div>
                       <div className="result-meta">
-                        <span className="pill">Rank #{result.retrieval_rank ?? index + 2}</span>
                         <span>{result.timestamp}</span>
                       </div>
                       <div className="feedback-bar">
@@ -544,14 +533,13 @@ function VideoPreview({ result, compact = false }: { result: NormalizedVideoResu
           loading="lazy"
           referrerPolicy="strict-origin-when-cross-origin"
         />
-        <span className="video-badge">{compact ? 'Alt Match' : 'YouTube Result'}</span>
       </div>
     )
   }
 
   return (
     <div className={`video-placeholder ${compact ? 'compact' : ''}`}>
-      <span className="video-badge">{compact ? 'Alt Match' : 'YouTube Result'}</span>
+      <span className="video-placeholder-copy">Video preview unavailable</span>
     </div>
   )
 }
